@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -9,9 +9,12 @@ import {
   AlertCircle,
   FileCheck,
   Send,
-  MapPin
+  MapPin,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { uploadItemImage } from '../../lib/firebase';
 
 export const ClaimVerificationModal: React.FC = () => {
   const {
@@ -24,10 +27,39 @@ export const ClaimVerificationModal: React.FC = () => {
   const [proofDescription, setProofDescription] = useState('');
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [proofPhotos, setProofPhotos] = useState<string[]>([]);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [handoffPreference, setHandoffPreference] = useState('Security / Help Desk');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!claimModalOpen || !claimTargetItem) return null;
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      const fileArray: File[] = Array.from(files);
+      for (const file of fileArray) {
+        const url = await uploadItemImage(file, 'claims');
+        if (url) {
+          setProofPhotos((prev) => [...prev, url]);
+        }
+      }
+    } catch (err) {
+      console.warn('Proof upload error:', err);
+    } finally {
+      setIsUploadingPhoto(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setProofPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,11 +67,9 @@ export const ClaimVerificationModal: React.FC = () => {
 
     submitClaim({
       itemId: claimTargetItem.id,
-      itemTitle: claimTargetItem.title,
       proofDescription,
       securityAnswer: securityAnswer || undefined,
-      proofPhotos,
-      status: 'pending',
+      proofImages: proofPhotos,
     });
 
     setIsSubmitted(true);
@@ -47,6 +77,7 @@ export const ClaimVerificationModal: React.FC = () => {
       setIsSubmitted(false);
       setProofDescription('');
       setSecurityAnswer('');
+      setProofPhotos([]);
       closeClaimModal();
     }, 1800);
   };
@@ -131,13 +162,63 @@ export const ClaimVerificationModal: React.FC = () => {
                   Proof of Ownership & Details <span className="text-rose-500">*</span>
                 </label>
                 <textarea
-                  rows={4}
+                  rows={3}
                   required
                   placeholder="Describe unique marks, serial number, exact contents, receipts, or previous photos you have..."
                   value={proofDescription}
                   onChange={(e) => setProofDescription(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
+              </div>
+
+              {/* Upload Proof Images to Firebase Storage */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Attach Receipts or Previous Photos (Optional)
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  className="w-full py-2.5 px-3 border border-dashed border-slate-300 hover:border-emerald-500 rounded-xl bg-slate-50 hover:bg-emerald-50/40 text-xs text-slate-600 font-medium transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isUploadingPhoto ? (
+                    <>
+                      <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                      <span>Uploading to Firebase Storage...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 text-slate-500" />
+                      <span>Upload Proof Photos / Receipts</span>
+                    </>
+                  )}
+                </button>
+
+                {proofPhotos.length > 0 && (
+                  <div className="mt-2.5 flex gap-2 flex-wrap">
+                    {proofPhotos.map((photo, idx) => (
+                      <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 group">
+                        <img src={photo} alt="proof" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(idx)}
+                          className="absolute top-1 right-1 p-0.5 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Handoff Preference */}

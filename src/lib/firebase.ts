@@ -23,6 +23,13 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage';
 import firebaseConfigData from '../../firebase-applet-config.json';
 import { Item, ClaimRequest, Conversation, Message, Notification, User } from '../types';
 import { INITIAL_ITEMS, INITIAL_CLAIMS, INITIAL_CONVERSATIONS, INITIAL_MESSAGES, INITIAL_NOTIFICATIONS, DEMO_USERS } from '../data/mockData';
@@ -48,6 +55,50 @@ export const db = firestoreDbId && firestoreDbId !== '(default)'
 // Initialize Firebase Auth
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Initialize Firebase Storage
+export const storage = getStorage(app);
+
+// ==================== FIREBASE STORAGE METHODS ====================
+
+/**
+ * Upload an image file to Firebase Storage and return its public download URL.
+ * Includes automatic local base64 fallback for robust offline/preview resilience.
+ */
+export const uploadItemImage = async (file: File | Blob, folder = 'items'): Promise<string> => {
+  try {
+    const timestamp = Date.now();
+    const safeName = (file instanceof File && file.name) ? file.name.replace(/[^a-zA-Z0-9.]/g, '_') : 'image.jpg';
+    const filePath = `${folder}/${timestamp}_${safeName}`;
+    const imageRef = storageRef(storage, filePath);
+    
+    // Upload bytes to Firebase Storage bucket
+    const uploadResult = await uploadBytes(imageRef, file, {
+      contentType: file.type || 'image/jpeg',
+    });
+    
+    // Get downloadable URL
+    const downloadUrl = await getDownloadURL(uploadResult.ref);
+    return downloadUrl;
+  } catch (error) {
+    console.warn('Firebase Storage upload notice, using client data URL fallback:', error);
+    // Fallback: convert to readable Data URL so the user's action always succeeds in preview
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  }
+};
+
+/**
+ * Upload multiple files in parallel to Firebase Storage
+ */
+export const uploadItemImages = async (files: File[], folder = 'items'): Promise<string[]> => {
+  const uploadPromises = files.map((file) => uploadItemImage(file, folder));
+  return Promise.all(uploadPromises);
+};
 
 // ==================== AUTH METHODS ====================
 

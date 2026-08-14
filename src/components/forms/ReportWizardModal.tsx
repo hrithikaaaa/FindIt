@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -17,11 +17,13 @@ import {
   Lock,
   Layers,
   Image as ImageIcon,
-  Tag
+  Tag,
+  Loader2
 } from 'lucide-react';
 import { ItemCategory, ItemType, Item } from '../../types';
 import { CATEGORIES_LIST, SAMPLE_PRESET_IMAGES } from '../../data/mockData';
 import { useApp } from '../../context/AppContext';
+import { uploadItemImage } from '../../lib/firebase';
 
 export const ReportWizardModal: React.FC = () => {
   const {
@@ -55,11 +57,13 @@ export const ReportWizardModal: React.FC = () => {
 
   const [images, setImages] = useState<string[]>([]);
   const [customImageUrl, setCustomImageUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [reward, setReward] = useState('');
   const [securityQuestion, setSecurityQuestion] = useState('');
   const [contactMethod, setContactMethod] = useState<'in_app' | 'campus_desk' | 'phone'>('in_app');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>(['campus', 'item']);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when modal opens
   const resetForm = () => {
@@ -71,6 +75,7 @@ export const ReportWizardModal: React.FC = () => {
     setCity('Mangaluru');
     setSpecificSpot('');
     setImages([]);
+    setIsUploading(false);
     setReward('');
     setSecurityQuestion('');
     setCreatedItem(null);
@@ -79,6 +84,50 @@ export const ReportWizardModal: React.FC = () => {
   const handleClose = () => {
     resetForm();
     closeReportWizard();
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const fileArray: File[] = Array.from(files);
+      for (const file of fileArray) {
+        const url = await uploadItemImage(file, 'items');
+        if (url) {
+          setImages((prev) => [...prev, url]);
+        }
+      }
+    } catch (err) {
+      console.warn('File upload handling error:', err);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const rawFiles = Array.from(e.dataTransfer.files);
+      const fileArray: File[] = rawFiles.filter((f): f is File => f instanceof File && f.type.startsWith('image/'));
+      for (const file of fileArray) {
+        const url = await uploadItemImage(file, 'items');
+        if (url) {
+          setImages((prev) => [...prev, url]);
+        }
+      }
+    } catch (err) {
+      console.warn('Drop upload handling error:', err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleAddPresetImage = (url: string) => {
@@ -400,31 +449,65 @@ export const ReportWizardModal: React.FC = () => {
                 </div>
 
                 {/* Upload Area */}
-                <div className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50/60 transition-colors">
-                  <Camera className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-slate-700">
-                    Add photos for higher match accuracy
-                  </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Click a preset below or enter an image URL
-                  </p>
+                <div 
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  className="border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-2xl p-6 text-center bg-slate-50/60 transition-colors"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="wizard-file-input"
+                  />
+                  
+                  {isUploading ? (
+                    <div className="py-3 flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+                      <p className="text-xs font-bold text-slate-700">Uploading to Firebase Storage...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Camera className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-xs font-bold text-slate-700">
+                        Add photos for higher match accuracy
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Drag and drop photos, browse your device, or paste a URL
+                      </p>
 
-                  <div className="mt-3 flex gap-2 max-w-md mx-auto">
-                    <input
-                      type="url"
-                      placeholder="Paste image URL (https://...)"
-                      value={customImageUrl}
-                      onChange={(e) => setCustomImageUrl(e.target.value)}
-                      className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCustomImage}
-                      className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
-                    >
-                      Add Photo
-                    </button>
-                  </div>
+                      <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload from Device</span>
+                        </button>
+                      </div>
+
+                      <div className="mt-3 flex gap-2 max-w-md mx-auto">
+                        <input
+                          type="url"
+                          placeholder="Or paste image URL (https://...)"
+                          value={customImageUrl}
+                          onChange={(e) => setCustomImageUrl(e.target.value)}
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCustomImage}
+                          className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors cursor-pointer"
+                        >
+                          Add URL
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Preset Suggestions for Category */}
