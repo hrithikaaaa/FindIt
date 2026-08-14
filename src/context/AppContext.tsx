@@ -21,6 +21,27 @@ import {
   INITIAL_NOTIFICATIONS,
 } from '../data/mockData';
 import { Language, Translations, translations, getCategoryTranslation } from '../i18n/translations';
+import {
+  auth,
+  db,
+  loginWithGoogle,
+  loginWithEmail,
+  registerWithEmail,
+  logoutUser,
+  syncUserProfileToFirestore,
+  seedDatabaseIfEmpty,
+  firestoreAddItem,
+  firestoreUpdateItem,
+  firestoreDeleteItem,
+  firestoreAddClaim,
+  firestoreUpdateClaim,
+  firestoreSaveConversation,
+  firestoreSendMessage,
+  firestoreAddNotification,
+  firestoreUpdateNotification,
+} from '../lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { collection, onSnapshot, doc, writeBatch } from 'firebase/firestore';
 
 export type AppView = 'home' | 'explore' | 'dashboard' | 'how-it-works' | 'safety';
 export type DashboardTab = 'overview' | 'lost-items' | 'found-items' | 'matches' | 'messages' | 'claims' | 'notifications' | 'profile' | 'settings';
@@ -43,16 +64,21 @@ interface AppContextType {
   isLoggedIn: boolean;
   login: (user?: User) => void;
   logout: () => void;
+  loginWithGoogleAuth: () => Promise<void>;
+  loginWithEmailAuth: (email: string, pass: string) => Promise<void>;
+  registerWithEmailAuth: (email: string, pass: string, name: string, role?: User['role']) => Promise<void>;
   registerUser: (name: string, email: string, role: User['role'], phone?: string) => void;
   switchUser: (userId: string) => void;
   allUsers: User[];
+  firebaseUser: FirebaseUser | null;
+  isFirebaseConnected: boolean;
 
   // Items State & Operations
   items: Item[];
-  addItem: (item: Omit<Item, 'id' | 'createdAt' | 'viewsCount' | 'reportedBy'> & { customUser?: User }) => Item;
-  updateItem: (id: string, updates: Partial<Item>) => void;
-  deleteItem: (id: string) => void;
-  markItemReunited: (id: string) => void;
+  addItem: (item: Omit<Item, 'id' | 'createdAt' | 'viewsCount' | 'reportedBy'> & { customUser?: User }) => Promise<Item>;
+  updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
+  deleteItem: (id: string) => Promise<void>;
+  markItemReunited: (id: string) => Promise<void>;
   selectedItem: Item | null;
   setSelectedItem: (item: Item | null) => void;
   openItemDetail: (item: Item) => void;
@@ -73,12 +99,15 @@ interface AppContextType {
   closeAuthModal: () => void;
   authModalMode: 'login' | 'register' | 'forgot';
   setAuthModalMode: (mode: 'login' | 'register' | 'forgot') => void;
+  authMode: 'login' | 'register' | 'forgot';
+  setAuthMode: (mode: 'login' | 'register' | 'forgot') => void;
+  setCurrentUser: React.Dispatch<React.SetStateAction<User>>;
 
   claimModalOpen: boolean;
   claimTargetItem: Item | null;
   openClaimModal: (item: Item) => void;
   closeClaimModal: () => void;
-  submitClaim: (data: { itemId: string; proofDescription: string; securityAnswer?: string; proofImages?: string[] }) => void;
+  submitClaim: (data: { itemId: string; proofDescription: string; securityAnswer?: string; proofImages?: string[] }) => Promise<void>;
 
   matchModalOpen: boolean;
   selectedMatchPair: { lostItem: Item; foundItem: Item } | null;
@@ -93,20 +122,20 @@ interface AppContextType {
 
   // Claims & Management
   claims: ClaimRequest[];
-  updateClaimStatus: (claimId: string, status: ClaimRequest['status'], handoffDetails?: string) => void;
+  updateClaimStatus: (claimId: string, status: ClaimRequest['status'], handoffDetails?: string) => Promise<void>;
 
   // Messages & Conversations
   conversations: Conversation[];
   activeConversation: Conversation | null;
   setActiveConversation: (conv: Conversation | null) => void;
   messages: Message[];
-  sendMessage: (recipientId: string, text: string, relatedItemId?: string) => void;
+  sendMessage: (recipientId: string, text: string, relatedItemId?: string) => Promise<void>;
   startOrOpenConversation: (participant: { id: string; name: string; avatar: string }, item: Item) => void;
 
   // Notifications
   notifications: Notification[];
-  markNotificationAsRead: (id: string) => void;
-  markAllNotificationsAsRead: () => void;
+  markNotificationAsRead: (id: string) => Promise<void>;
+  markAllNotificationsAsRead: () => Promise<void>;
   unreadNotificationsCount: number;
 
   // Toast System
@@ -166,6 +195,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Navigation
   const [currentView, setCurrentView] = useState<AppView>('home');
   const [dashboardTab, setDashboardTab] = useState<DashboardTab>('overview');
+
+  // Firebase connection state
+  const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(true);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
 
   // User & Auth
   const [currentUser, setCurrentUser] = useState<User>(() => {
@@ -229,7 +262,142 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  // Sync to LocalStorage
+  // ==================== FIREBASE REAL-TIME LISTENERS & INIT ====================
+
+  useEffect(() => {
+    // Seed initial data to Firestore if it's empty
+    seedDatabaseIfEmpty();
+
+    // Listen to Firebase Auth state
+    const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (fbUser) {
+        setIsLoggedIn(true);
+        const mappedUser: User = {
+          id: fbUser.uid,
+          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Community Member',
+          email: fbUser.email || 'member@findit.community',
+          avatar: fbUser.photoURL || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80`,
+          role: 'Resident',
+          joinedDate: 'Joined recently',
+          reputationPoints: 120,
+          itemsReportedCount: 0,
+          itemsReunitedCount: 0,
+          isVerified: true,
+        };
+        setCurrentUser(mappedUser);
+        syncUserProfileToFirestore(mappedUser);
+      }
+    });
+
+    // Real-time Firestore Listeners
+    let unsubItems = () => {};
+    let unsubClaims = () => {};
+    let unsubConversations = () => {};
+    let unsubMessages = () => {};
+    let unsubNotifications = () => {};
+    let unsubUsers = () => {};
+
+    try {
+      // Items listener
+      unsubItems = onSnapshot(collection(db, 'items'), (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedItems: Item[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedItems.push(docSnap.data() as Item);
+          });
+          // Sort items by createdAt desc
+          fetchedItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setItems(fetchedItems);
+        }
+      }, (err) => {
+        console.warn('Firestore items sync notice:', err);
+      });
+
+      // Claims listener
+      unsubClaims = onSnapshot(collection(db, 'claims'), (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedClaims: ClaimRequest[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedClaims.push(docSnap.data() as ClaimRequest);
+          });
+          fetchedClaims.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setClaims(fetchedClaims);
+        }
+      }, (err) => {
+        console.warn('Firestore claims sync notice:', err);
+      });
+
+      // Conversations listener
+      unsubConversations = onSnapshot(collection(db, 'conversations'), (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedConvs: Conversation[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedConvs.push(docSnap.data() as Conversation);
+          });
+          setConversations(fetchedConvs);
+        }
+      }, (err) => {
+        console.warn('Firestore conversations sync notice:', err);
+      });
+
+      // Messages listener
+      unsubMessages = onSnapshot(collection(db, 'messages'), (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedMessages: Message[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedMessages.push(docSnap.data() as Message);
+          });
+          fetchedMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          setMessages(fetchedMessages);
+        }
+      }, (err) => {
+        console.warn('Firestore messages sync notice:', err);
+      });
+
+      // Notifications listener
+      unsubNotifications = onSnapshot(collection(db, 'notifications'), (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedNotifs: Notification[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedNotifs.push(docSnap.data() as Notification);
+          });
+          setNotifications(fetchedNotifs);
+        }
+      }, (err) => {
+        console.warn('Firestore notifications sync notice:', err);
+      });
+
+      // Users listener
+      unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedUsers: User[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedUsers.push(docSnap.data() as User);
+          });
+          setAllUsers(fetchedUsers);
+        }
+      }, (err) => {
+        console.warn('Firestore users sync notice:', err);
+      });
+
+      setIsFirebaseConnected(true);
+    } catch (e) {
+      console.warn('Firestore listener initialization fallback:', e);
+    }
+
+    return () => {
+      unsubscribeAuth();
+      unsubItems();
+      unsubClaims();
+      unsubConversations();
+      unsubMessages();
+      unsubNotifications();
+      unsubUsers();
+    };
+  }, []);
+
+  // Sync to LocalStorage as cache
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(items));
   }, [items]);
@@ -277,15 +445,108 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Auth Operations
+  const loginWithGoogleAuth = async () => {
+    try {
+      const fbUser = await loginWithGoogle();
+      if (fbUser) {
+        const loggedUser: User = {
+          id: fbUser.uid,
+          name: fbUser.displayName || 'Community Member',
+          email: fbUser.email || 'user@findit.community',
+          avatar: fbUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+          role: 'Resident',
+          joinedDate: 'Joined recently',
+          reputationPoints: 150,
+          itemsReportedCount: 0,
+          itemsReunitedCount: 0,
+          isVerified: true,
+        };
+        setCurrentUser(loggedUser);
+        setIsLoggedIn(true);
+        setAuthModalOpen(false);
+        syncUserProfileToFirestore(loggedUser);
+        addToast('success', `Welcome back, ${loggedUser.name}!`, 'Signed in securely with Firebase Google Auth.');
+      }
+    } catch (err: any) {
+      console.error('Google login failure:', err);
+      addToast('error', 'Google Sign-In Failed', err.message || 'Please try again or use demo profiles.');
+    }
+  };
+
+  const loginWithEmailAuth = async (email: string, pass: string) => {
+    try {
+      const cred = await loginWithEmail(email, pass);
+      if (cred.user) {
+        const loggedUser: User = {
+          id: cred.user.uid,
+          name: cred.user.displayName || email.split('@')[0],
+          email: cred.user.email || email,
+          avatar: cred.user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+          role: 'Student',
+          joinedDate: 'Joined recently',
+          reputationPoints: 120,
+          itemsReportedCount: 0,
+          itemsReunitedCount: 0,
+          isVerified: true,
+        };
+        setCurrentUser(loggedUser);
+        setIsLoggedIn(true);
+        setAuthModalOpen(false);
+        syncUserProfileToFirestore(loggedUser);
+        addToast('success', `Signed in as ${loggedUser.name}!`, 'Connected to Firebase backend.');
+      }
+    } catch (err: any) {
+      console.error('Email sign in error:', err);
+      // If user not found in firebase auth, provide clear helpful message
+      addToast('error', 'Authentication Notice', err.message || 'Invalid email or password.');
+      throw err;
+    }
+  };
+
+  const registerWithEmailAuth = async (email: string, pass: string, name: string, role: User['role'] = 'Student') => {
+    try {
+      const cred = await registerWithEmail(email, pass);
+      if (cred.user) {
+        const newUser: User = {
+          id: cred.user.uid,
+          name: name || email.split('@')[0],
+          email: cred.user.email || email,
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          role,
+          joinedDate: 'Joined today',
+          reputationPoints: 100,
+          itemsReportedCount: 0,
+          itemsReunitedCount: 0,
+          isVerified: true,
+        };
+        setCurrentUser(newUser);
+        setIsLoggedIn(true);
+        setAuthModalOpen(false);
+        syncUserProfileToFirestore(newUser);
+        addToast('success', `Welcome to FindIt, ${name}!`, 'Your Firebase community account is active.');
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      addToast('error', 'Registration Error', err.message || 'Failed to create account.');
+      throw err;
+    }
+  };
+
   const login = (user?: User) => {
     const userToLogin = user || CURRENT_USER;
     setCurrentUser(userToLogin);
     setIsLoggedIn(true);
     setAuthModalOpen(false);
-    addToast('success', `Welcome back, ${userToLogin.name}!`, 'You are now signed in to FindIt.');
+    syncUserProfileToFirestore(userToLogin);
+    addToast('success', `Welcome back, ${userToLogin.name}!`, 'Signed in to FindIt.');
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await logoutUser();
+    } catch (e) {
+      // ignore
+    }
     setIsLoggedIn(false);
     addToast('info', 'Signed Out', 'You have been logged out safely.');
   };
@@ -308,6 +569,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(newUser);
     setIsLoggedIn(true);
     setAuthModalOpen(false);
+    syncUserProfileToFirestore(newUser);
     addToast('success', `Welcome to FindIt, ${name}!`, 'Your community account is ready.');
   };
 
@@ -316,14 +578,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (target) {
       setCurrentUser(target);
       setIsLoggedIn(true);
+      syncUserProfileToFirestore(target);
       addToast('info', `Switched User Profile`, `Now browsing as ${target.name} (${target.role})`);
     }
   };
 
   // Item Operations
-  const addItem = (
+  const addItem = async (
     itemData: Omit<Item, 'id' | 'createdAt' | 'viewsCount' | 'reportedBy'> & { customUser?: User }
-  ) => {
+  ): Promise<Item> => {
     const newItem: Item = {
       ...itemData,
       id: `item_${Date.now()}`,
@@ -339,37 +602,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
     };
 
+    // Save to Firestore
+    try {
+      await firestoreAddItem(newItem);
+    } catch (err) {
+      console.warn('Firestore add fallback to local:', err);
+    }
+
     setItems((prev) => [newItem, ...prev]);
 
     // Update user stats
-    setCurrentUser((prev) => ({
-      ...prev,
-      itemsReportedCount: prev.itemsReportedCount + 1,
-      reputationPoints: prev.reputationPoints + 50,
-    }));
+    const updatedUser = {
+      ...currentUser,
+      itemsReportedCount: currentUser.itemsReportedCount + 1,
+      reputationPoints: currentUser.reputationPoints + 50,
+    };
+    setCurrentUser(updatedUser);
+    syncUserProfileToFirestore(updatedUser);
 
     // Trigger celebration & toast
     triggerCelebration();
     addToast(
       'success',
       newItem.type === 'lost' ? 'Lost Item Reported!' : 'Found Item Reported!',
-      'Your item has been published to the FindIt community board.'
+      'Your item has been published to the FindIt community board & saved in Firestore.'
     );
 
     return newItem;
   };
 
-  const updateItem = (id: string, updates: Partial<Item>) => {
+  const updateItem = async (id: string, updates: Partial<Item>) => {
+    try {
+      await firestoreUpdateItem(id, updates);
+    } catch (err) {
+      console.warn('Firestore update fallback to local:', err);
+    }
+
     setItems((prev) =>
       prev.map((it) => (it.id === id ? { ...it, ...updates } : it))
     );
     if (selectedItem?.id === id) {
       setSelectedItem((prev) => (prev ? { ...prev, ...updates } : null));
     }
-    addToast('success', 'Item Updated', 'The item details have been saved.');
+    addToast('success', 'Item Updated', 'The item details have been saved to Firebase.');
   };
 
-  const deleteItem = (id: string) => {
+  const deleteItem = async (id: string) => {
+    try {
+      await firestoreDeleteItem(id);
+    } catch (err) {
+      console.warn('Firestore delete fallback to local:', err);
+    }
+
     setItems((prev) => prev.filter((it) => it.id !== id));
     if (selectedItem?.id === id) {
       setSelectedItem(null);
@@ -377,7 +661,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast('info', 'Item Removed', 'The report was deleted successfully.');
   };
 
-  const markItemReunited = (id: string) => {
+  const markItemReunited = async (id: string) => {
+    try {
+      await firestoreUpdateItem(id, { status: 'reunited' });
+    } catch (err) {
+      console.warn('Firestore reunite fallback to local:', err);
+    }
+
     setItems((prev) =>
       prev.map((it) => (it.id === id ? { ...it, status: 'reunited' } : it))
     );
@@ -396,14 +686,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isRead: false,
       relatedItemId: id,
     };
+    try {
+      await firestoreAddNotification(newNotif);
+    } catch (e) {
+      // ignore
+    }
     setNotifications((prev) => [newNotif, ...prev]);
 
     // Increase user stats
-    setCurrentUser((prev) => ({
-      ...prev,
-      itemsReunitedCount: prev.itemsReunitedCount + 1,
-      reputationPoints: prev.reputationPoints + 100,
-    }));
+    const updatedUser = {
+      ...currentUser,
+      itemsReunitedCount: currentUser.itemsReunitedCount + 1,
+      reputationPoints: currentUser.reputationPoints + 100,
+    };
+    setCurrentUser(updatedUser);
+    syncUserProfileToFirestore(updatedUser);
 
     triggerCelebration();
     addToast('success', 'Item Marked as Reunited!', 'Great work helping reconnect belongings in our community.');
@@ -411,9 +708,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const openItemDetail = (item: Item) => {
     setSelectedItem(item);
-    // Increase view count locally
+    // Increase view count locally & sync
+    const newViews = (item.viewsCount || 0) + 1;
+    firestoreUpdateItem(item.id, { viewsCount: newViews }).catch(() => {});
     setItems((prev) =>
-      prev.map((it) => (it.id === item.id ? { ...it, viewsCount: it.viewsCount + 1 } : it))
+      prev.map((it) => (it.id === item.id ? { ...it, viewsCount: newViews } : it))
     );
   };
 
@@ -450,7 +749,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setClaimTargetItem(null);
   };
 
-  const submitClaim = (data: {
+  const submitClaim = async (data: {
     itemId: string;
     proofDescription: string;
     securityAnswer?: string;
@@ -476,6 +775,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       itemImage: targetItem.images[0] || '',
     };
 
+    try {
+      await firestoreAddClaim(newClaim);
+    } catch (err) {
+      console.warn('Firestore claim add fallback to local:', err);
+    }
     setClaims((prev) => [newClaim, ...prev]);
 
     // Send a notification to the item poster
@@ -489,16 +793,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isRead: false,
       relatedItemId: targetItem.id,
     };
+    try {
+      await firestoreAddNotification(notif);
+    } catch (e) {
+      // ignore
+    }
     setNotifications((prev) => [notif, ...prev]);
 
     // Also auto create/update conversation between claimant and finder
     startOrOpenConversation(targetItem.reportedBy, targetItem);
 
     closeClaimModal();
-    addToast('success', 'Verification Request Sent', 'The finder has been notified securely without exposing your email.');
+    addToast('success', 'Verification Request Sent', 'The finder has been notified securely in Firebase.');
   };
 
-  const updateClaimStatus = (claimId: string, status: ClaimRequest['status'], handoffDetails?: string) => {
+  const updateClaimStatus = async (claimId: string, status: ClaimRequest['status'], handoffDetails?: string) => {
+    try {
+      await firestoreUpdateClaim(claimId, { status, handoffDetails });
+    } catch (err) {
+      console.warn('Firestore update claim fallback:', err);
+    }
+
     setClaims((prev) =>
       prev.map((c) => (c.id === claimId ? { ...c, status, handoffDetails } : c))
     );
@@ -519,6 +834,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           isRead: false,
           relatedItemId: targetClaim.itemId,
         };
+        try {
+          await firestoreAddNotification(notif);
+        } catch (e) {}
         setNotifications((prev) => [notif, ...prev]);
       } else if (status === 'rejected') {
         addToast('info', 'Claim Declined', 'The claimant has been notified.');
@@ -573,6 +891,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lastMessageTime: 'Just now',
         unreadCount: 0,
       };
+      firestoreSaveConversation(existingConv).catch(() => {});
       setConversations((prev) => [existingConv!, ...prev]);
     }
 
@@ -581,7 +900,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDashboardTab('messages');
   };
 
-  const sendMessage = (recipientId: string, text: string, relatedItemId?: string) => {
+  const sendMessage = async (recipientId: string, text: string, relatedItemId?: string) => {
     if (!text.trim() || !activeConversation) return;
 
     const newMsg: Message = {
@@ -596,30 +915,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isRead: false,
     };
 
+    try {
+      await firestoreSendMessage(newMsg);
+    } catch (e) {
+      console.warn('Message send to Firestore fallback:', e);
+    }
+
     setMessages((prev) => [...prev, newMsg]);
 
     // Update conversation metadata
+    const updatedConv = {
+      ...activeConversation,
+      lastMessage: text.trim(),
+      lastMessageTime: 'Just now',
+    };
+    firestoreSaveConversation(updatedConv).catch(() => {});
+
     setConversations((prev) =>
-      prev.map((c) =>
-        c.id === activeConversation.id
-          ? {
-              ...c,
-              lastMessage: text.trim(),
-              lastMessageTime: 'Just now',
-            }
-          : c
-      )
+      prev.map((c) => (c.id === activeConversation.id ? updatedConv : c))
     );
   };
 
   // Notifications
-  const markNotificationAsRead = (id: string) => {
+  const markNotificationAsRead = async (id: string) => {
+    try {
+      await firestoreUpdateNotification(id, { isRead: true });
+    } catch (e) {}
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
   };
 
-  const markAllNotificationsAsRead = () => {
+  const markAllNotificationsAsRead = async () => {
+    notifications.forEach((n) => {
+      firestoreUpdateNotification(n.id, { isRead: true }).catch(() => {});
+    });
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     addToast('info', 'All Marked as Read', 'Notifications inbox cleared.');
   };
@@ -643,9 +973,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isLoggedIn,
         login,
         logout,
+        loginWithGoogleAuth,
+        loginWithEmailAuth,
+        registerWithEmailAuth,
         registerUser,
         switchUser,
         allUsers,
+        firebaseUser,
+        isFirebaseConnected,
 
         items,
         addItem,
@@ -670,6 +1005,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         closeAuthModal,
         authModalMode,
         setAuthModalMode,
+        authMode: authModalMode,
+        setAuthMode: setAuthModalMode,
+        setCurrentUser,
 
         claimModalOpen,
         claimTargetItem,

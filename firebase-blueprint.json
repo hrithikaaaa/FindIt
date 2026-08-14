@@ -1,0 +1,151 @@
+{
+  "entities": {
+    "items": {
+      "title": "Lost & Found Items",
+      "description": "Lost and found item listings reported by community members.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["lost", "found"] },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "identifyingFeatures": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "city": { "type": "string" },
+            "specificSpot": { "type": "string" },
+            "coordinates": {
+              "type": "object",
+              "properties": {
+                "lat": { "type": "number" },
+                "lng": { "type": "number" }
+              }
+            }
+          }
+        },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["active", "in_verification", "reunited", "archived"] },
+        "reportedBy": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "email": { "type": "string" },
+            "avatar": { "type": "string" },
+            "verified": { "type": "boolean" },
+            "role": { "type": "string" }
+          }
+        },
+        "createdAt": { "type": "string" },
+        "matchedItemId": { "type": "string" },
+        "reward": { "type": "string" },
+        "securityQuestion": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "viewsCount": { "type": "number" }
+      },
+      "required": ["id", "type", "title", "category", "description", "location", "date", "status", "reportedBy", "createdAt"]
+    },
+    "claims": {
+      "title": "Ownership Claims",
+      "description": "Private ownership verification requests submitted on found or lost listings.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "itemId": { "type": "string" },
+        "claimantId": { "type": "string" },
+        "claimantName": { "type": "string" },
+        "claimantAvatar": { "type": "string" },
+        "claimantEmail": { "type": "string" },
+        "proofDescription": { "type": "string" },
+        "proofImages": { "type": "array", "items": { "type": "string" } },
+        "securityAnswer": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "completed"] },
+        "createdAt": { "type": "string" },
+        "itemTitle": { "type": "string" },
+        "itemType": { "type": "string" },
+        "itemImage": { "type": "string" },
+        "handoffDetails": { "type": "string" }
+      },
+      "required": ["id", "itemId", "claimantId", "proofDescription", "status", "createdAt"]
+    },
+    "conversations": {
+      "title": "Conversations",
+      "description": "Private messaging conversations between item finders and claimants/owners.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "participantId": { "type": "string" },
+        "participantName": { "type": "string" },
+        "participantAvatar": { "type": "string" },
+        "relatedItemId": { "type": "string" },
+        "relatedItemTitle": { "type": "string" },
+        "relatedItemType": { "type": "string" },
+        "relatedItemImage": { "type": "string" },
+        "lastMessage": { "type": "string" },
+        "lastMessageTime": { "type": "string" },
+        "unreadCount": { "type": "number" },
+        "participantIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "relatedItemId"]
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Individual messages sent within a conversation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderAvatar": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "isRead": { "type": "boolean" }
+      },
+      "required": ["id", "conversationId", "senderId", "recipientId", "text", "timestamp"]
+    },
+    "notifications": {
+      "title": "User Notifications",
+      "description": "Alerts for matches, claims, messages, and reunited status.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "relatedItemId": { "type": "string" },
+        "relatedMatchId": { "type": "string" },
+        "actionUrl": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "title", "message", "timestamp", "isRead"]
+    },
+    "users": {
+      "title": "User Profiles",
+      "description": "Registered and authenticated community members.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "avatar": { "type": "string" },
+        "role": { "type": "string" },
+        "joinedDate": { "type": "string" },
+        "phone": { "type": "string" },
+        "reputationPoints": { "type": "number" },
+        "itemsReportedCount": { "type": "number" },
+        "itemsReunitedCount": { "type": "number" },
+        "isVerified": { "type": "boolean" }
+      },
+      "required": ["id", "name", "email"]
+    }
+  }
+}
