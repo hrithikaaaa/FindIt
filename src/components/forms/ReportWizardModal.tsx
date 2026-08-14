@@ -18,7 +18,8 @@ import {
   Layers,
   Image as ImageIcon,
   Tag,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { ItemCategory, ItemType, Item } from '../../types';
 import { CATEGORIES_LIST, SAMPLE_PRESET_IMAGES } from '../../data/mockData';
@@ -58,6 +59,8 @@ export const ReportWizardModal: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);
   const [customImageUrl, setCustomImageUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [reward, setReward] = useState('');
   const [securityQuestion, setSecurityQuestion] = useState('');
   const [contactMethod, setContactMethod] = useState<'in_app' | 'campus_desk' | 'phone'>('in_app');
@@ -76,6 +79,8 @@ export const ReportWizardModal: React.FC = () => {
     setSpecificSpot('');
     setImages([]);
     setIsUploading(false);
+    setIsSubmitting(false);
+    setSubmitError(null);
     setReward('');
     setSecurityQuestion('');
     setCreatedItem(null);
@@ -155,37 +160,57 @@ export const ReportWizardModal: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
-    // Fallback image if none uploaded
-    const finalImages =
-      images.length > 0
-        ? images
-        : SAMPLE_PRESET_IMAGES[category] || [
-            'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
-          ];
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    const newItem = addItem({
-      type: reportWizardType,
-      title: title || `${category} (${reportWizardType.toUpperCase()})`,
-      category,
-      description: description || `Reported ${reportWizardType} item at ${locationName}.`,
-      identifyingFeatures,
-      location: {
-        name: locationName || 'Central Community Area',
-        city: city || 'Local Area',
-        specificSpot,
-      },
-      date,
-      time,
-      images: finalImages,
-      status: 'active',
-      reward: reportWizardType === 'lost' && reward ? reward : undefined,
-      securityQuestion: reportWizardType === 'found' && securityQuestion ? securityQuestion : undefined,
-      tags: tags.length > 0 ? tags : [category.toLowerCase()],
-    });
+    try {
+      // Fallback image if none uploaded
+      const finalImages =
+        images.length > 0
+          ? images
+          : SAMPLE_PRESET_IMAGES[category] || [
+              'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+            ];
 
-    setCreatedItem(newItem);
-    setStep(5); // Move to success step
+      const itemPayload: any = {
+        type: reportWizardType,
+        title: title.trim() || `${category} (${reportWizardType.toUpperCase()})`,
+        category,
+        description: description.trim() || `Reported ${reportWizardType} item at ${locationName}.`,
+        identifyingFeatures: identifyingFeatures.trim() || undefined,
+        location: {
+          name: locationName.trim() || 'Central Community Area',
+          city: city.trim() || 'Local Area',
+          specificSpot: specificSpot.trim() || undefined,
+        },
+        date: date || new Date().toISOString().split('T')[0],
+        time: time || '12:00',
+        images: finalImages,
+        status: 'active' as const,
+        tags: tags.length > 0 ? tags : [category.toLowerCase()],
+      };
+
+      if (reportWizardType === 'lost' && reward.trim()) {
+        itemPayload.reward = reward.trim();
+      }
+      if (reportWizardType === 'found' && securityQuestion.trim()) {
+        itemPayload.securityQuestion = securityQuestion.trim();
+      }
+
+      console.log('[FindIt] Submitting item to Firestore:', itemPayload);
+      const newItem = await addItem(itemPayload);
+      console.log('[FindIt] Successfully saved to Firestore with ID:', newItem.id);
+
+      setCreatedItem(newItem);
+      setStep(5); // Move to success step
+    } catch (err: any) {
+      console.error('[FindIt] Error submitting item to Firestore:', err);
+      const errorMsg = err?.message || 'Failed to persist item to Firestore. Please check your network and Firebase configuration.';
+      setSubmitError(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!reportWizardOpen) return null;
@@ -654,6 +679,19 @@ export const ReportWizardModal: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Error Banner if submission fails */}
+                {submitError && (
+                  <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 space-y-1 animate-in fade-in">
+                    <div className="flex items-center gap-2 font-bold text-xs">
+                      <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                      <span>Could not save report to Firebase</span>
+                    </div>
+                    <p className="text-xs text-rose-700 leading-relaxed font-mono break-all">
+                      {submitError}
+                    </p>
+                  </div>
+                )}
+
                 {/* Summary Preview Box */}
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
@@ -721,8 +759,9 @@ export const ReportWizardModal: React.FC = () => {
               {step > 1 ? (
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => setStep((prev) => (prev - 1) as any)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-white text-slate-700 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-white text-slate-700 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Back</span>
@@ -750,15 +789,27 @@ export const ReportWizardModal: React.FC = () => {
               ) : (
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={handleSubmit}
                   className={`px-7 py-3 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer ${
-                    isLost
+                    isSubmitting
+                      ? 'bg-slate-400 cursor-wait opacity-80'
+                      : isLost
                       ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500'
                       : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500'
                   }`}
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Submit & Publish</span>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving to Firestore...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Submit & Publish</span>
+                    </>
+                  )}
                 </button>
               )}
             </div>

@@ -29,6 +29,8 @@ export const ClaimVerificationModal: React.FC = () => {
   const [proofPhotos, setProofPhotos] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [handoffPreference, setHandoffPreference] = useState('Security / Help Desk');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,25 +63,35 @@ export const ClaimVerificationModal: React.FC = () => {
     setProofPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proofDescription.trim()) return;
 
-    submitClaim({
-      itemId: claimTargetItem.id,
-      proofDescription,
-      securityAnswer: securityAnswer || undefined,
-      proofImages: proofPhotos,
-    });
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setProofDescription('');
-      setSecurityAnswer('');
-      setProofPhotos([]);
-      closeClaimModal();
-    }, 1800);
+    try {
+      await submitClaim({
+        itemId: claimTargetItem.id,
+        proofDescription: proofDescription.trim(),
+        securityAnswer: securityAnswer.trim() || undefined,
+        proofImages: proofPhotos,
+      });
+
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setProofDescription('');
+        setSecurityAnswer('');
+        setProofPhotos([]);
+        closeClaimModal();
+      }, 1800);
+    } catch (err: any) {
+      console.error('[FindIt] Claim submission error:', err);
+      setSubmitError(err?.message || 'Failed to submit claim verification.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -237,21 +249,43 @@ export const ClaimVerificationModal: React.FC = () => {
                 </select>
               </div>
 
+              {/* Error Banner if submission fails */}
+              {submitError && (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                    <span>Submission Error</span>
+                  </div>
+                  <p className="text-rose-700 font-mono text-[11px]">{submitError}</p>
+                </div>
+              )}
+
               {/* Submit Buttons */}
               <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={closeClaimModal}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Verification Request</span>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Submitting to Firebase...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send Verification Request</span>
+                    </>
+                  )}
                 </button>
               </div>
 

@@ -300,86 +300,110 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     try {
       // Items listener
-      unsubItems = onSnapshot(collection(db, 'items'), (snapshot) => {
-        if (!snapshot.empty) {
+      unsubItems = onSnapshot(
+        collection(db, 'items'),
+        (snapshot) => {
           const fetchedItems: Item[] = [];
           snapshot.forEach((docSnap) => {
             fetchedItems.push(docSnap.data() as Item);
           });
           // Sort items by createdAt desc
           fetchedItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          setItems(fetchedItems);
+          if (fetchedItems.length > 0) {
+            setItems(fetchedItems);
+          }
+        },
+        (err) => {
+          console.error('[Firestore] Real-time items sync error:', err);
         }
-      }, (err) => {
-        console.warn('Firestore items sync notice:', err);
-      });
+      );
 
       // Claims listener
-      unsubClaims = onSnapshot(collection(db, 'claims'), (snapshot) => {
-        if (!snapshot.empty) {
+      unsubClaims = onSnapshot(
+        collection(db, 'claims'),
+        (snapshot) => {
           const fetchedClaims: ClaimRequest[] = [];
           snapshot.forEach((docSnap) => {
             fetchedClaims.push(docSnap.data() as ClaimRequest);
           });
           fetchedClaims.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          setClaims(fetchedClaims);
+          if (fetchedClaims.length > 0) {
+            setClaims(fetchedClaims);
+          }
+        },
+        (err) => {
+          console.error('[Firestore] Real-time claims sync error:', err);
         }
-      }, (err) => {
-        console.warn('Firestore claims sync notice:', err);
-      });
+      );
 
       // Conversations listener
-      unsubConversations = onSnapshot(collection(db, 'conversations'), (snapshot) => {
-        if (!snapshot.empty) {
+      unsubConversations = onSnapshot(
+        collection(db, 'conversations'),
+        (snapshot) => {
           const fetchedConvs: Conversation[] = [];
           snapshot.forEach((docSnap) => {
             fetchedConvs.push(docSnap.data() as Conversation);
           });
-          setConversations(fetchedConvs);
+          if (fetchedConvs.length > 0) {
+            setConversations(fetchedConvs);
+          }
+        },
+        (err) => {
+          console.error('[Firestore] Real-time conversations sync error:', err);
         }
-      }, (err) => {
-        console.warn('Firestore conversations sync notice:', err);
-      });
+      );
 
       // Messages listener
-      unsubMessages = onSnapshot(collection(db, 'messages'), (snapshot) => {
-        if (!snapshot.empty) {
+      unsubMessages = onSnapshot(
+        collection(db, 'messages'),
+        (snapshot) => {
           const fetchedMessages: Message[] = [];
           snapshot.forEach((docSnap) => {
             fetchedMessages.push(docSnap.data() as Message);
           });
           fetchedMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-          setMessages(fetchedMessages);
+          if (fetchedMessages.length > 0) {
+            setMessages(fetchedMessages);
+          }
+        },
+        (err) => {
+          console.error('[Firestore] Real-time messages sync error:', err);
         }
-      }, (err) => {
-        console.warn('Firestore messages sync notice:', err);
-      });
+      );
 
       // Notifications listener
-      unsubNotifications = onSnapshot(collection(db, 'notifications'), (snapshot) => {
-        if (!snapshot.empty) {
+      unsubNotifications = onSnapshot(
+        collection(db, 'notifications'),
+        (snapshot) => {
           const fetchedNotifs: Notification[] = [];
           snapshot.forEach((docSnap) => {
             fetchedNotifs.push(docSnap.data() as Notification);
           });
-          setNotifications(fetchedNotifs);
+          if (fetchedNotifs.length > 0) {
+            setNotifications(fetchedNotifs);
+          }
+        },
+        (err) => {
+          console.error('[Firestore] Real-time notifications sync error:', err);
         }
-      }, (err) => {
-        console.warn('Firestore notifications sync notice:', err);
-      });
+      );
 
       // Users listener
-      unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-        if (!snapshot.empty) {
+      unsubUsers = onSnapshot(
+        collection(db, 'users'),
+        (snapshot) => {
           const fetchedUsers: User[] = [];
           snapshot.forEach((docSnap) => {
             fetchedUsers.push(docSnap.data() as User);
           });
-          setAllUsers(fetchedUsers);
+          if (fetchedUsers.length > 0) {
+            setAllUsers(fetchedUsers);
+          }
+        },
+        (err) => {
+          console.error('[Firestore] Real-time users sync error:', err);
         }
-      }, (err) => {
-        console.warn('Firestore users sync notice:', err);
-      });
+      );
 
       setIsFirebaseConnected(true);
     } catch (e) {
@@ -602,20 +626,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
     };
 
-    // Save to Firestore
-    try {
-      await firestoreAddItem(newItem);
-    } catch (err) {
-      console.warn('Firestore add fallback to local:', err);
-    }
+    // Save directly to Firestore (throws if write fails)
+    await firestoreAddItem(newItem);
 
-    setItems((prev) => [newItem, ...prev]);
+    // Update local React items state
+    setItems((prev) => {
+      const exists = prev.some((it) => it.id === newItem.id);
+      return exists ? prev : [newItem, ...prev];
+    });
 
     // Update user stats
     const updatedUser = {
       ...currentUser,
-      itemsReportedCount: currentUser.itemsReportedCount + 1,
-      reputationPoints: currentUser.reputationPoints + 50,
+      itemsReportedCount: (currentUser.itemsReportedCount || 0) + 1,
+      reputationPoints: (currentUser.reputationPoints || 0) + 50,
     };
     setCurrentUser(updatedUser);
     syncUserProfileToFirestore(updatedUser);
@@ -632,11 +656,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateItem = async (id: string, updates: Partial<Item>) => {
-    try {
-      await firestoreUpdateItem(id, updates);
-    } catch (err) {
-      console.warn('Firestore update fallback to local:', err);
-    }
+    await firestoreUpdateItem(id, updates);
 
     setItems((prev) =>
       prev.map((it) => (it.id === id ? { ...it, ...updates } : it))
@@ -648,11 +668,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteItem = async (id: string) => {
-    try {
-      await firestoreDeleteItem(id);
-    } catch (err) {
-      console.warn('Firestore delete fallback to local:', err);
-    }
+    await firestoreDeleteItem(id);
 
     setItems((prev) => prev.filter((it) => it.id !== id));
     if (selectedItem?.id === id) {
@@ -662,11 +678,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const markItemReunited = async (id: string) => {
-    try {
-      await firestoreUpdateItem(id, { status: 'reunited' });
-    } catch (err) {
-      console.warn('Firestore reunite fallback to local:', err);
-    }
+    await firestoreUpdateItem(id, { status: 'reunited' });
 
     setItems((prev) =>
       prev.map((it) => (it.id === id ? { ...it, status: 'reunited' } : it))
@@ -689,15 +701,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       await firestoreAddNotification(newNotif);
     } catch (e) {
-      // ignore
+      console.error('Notification write error:', e);
     }
     setNotifications((prev) => [newNotif, ...prev]);
 
     // Increase user stats
     const updatedUser = {
       ...currentUser,
-      itemsReunitedCount: currentUser.itemsReunitedCount + 1,
-      reputationPoints: currentUser.reputationPoints + 100,
+      itemsReunitedCount: (currentUser.itemsReunitedCount || 0) + 1,
+      reputationPoints: (currentUser.reputationPoints || 0) + 100,
     };
     setCurrentUser(updatedUser);
     syncUserProfileToFirestore(updatedUser);
@@ -775,11 +787,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       itemImage: targetItem.images[0] || '',
     };
 
-    try {
-      await firestoreAddClaim(newClaim);
-    } catch (err) {
-      console.warn('Firestore claim add fallback to local:', err);
-    }
+    await firestoreAddClaim(newClaim);
     setClaims((prev) => [newClaim, ...prev]);
 
     // Send a notification to the item poster
@@ -796,7 +804,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       await firestoreAddNotification(notif);
     } catch (e) {
-      // ignore
+      console.error('Notification write error:', e);
     }
     setNotifications((prev) => [notif, ...prev]);
 
@@ -808,11 +816,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateClaimStatus = async (claimId: string, status: ClaimRequest['status'], handoffDetails?: string) => {
-    try {
-      await firestoreUpdateClaim(claimId, { status, handoffDetails });
-    } catch (err) {
-      console.warn('Firestore update claim fallback:', err);
-    }
+    await firestoreUpdateClaim(claimId, { status, handoffDetails });
 
     setClaims((prev) =>
       prev.map((c) => (c.id === claimId ? { ...c, status, handoffDetails } : c))

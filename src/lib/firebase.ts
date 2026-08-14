@@ -124,14 +124,43 @@ export const logoutUser = async () => {
   return await signOut(auth);
 };
 
+// ==================== FIRESTORE DATA SANITIZATION ====================
+
+/**
+ * Recursively remove `undefined` fields from objects to prevent Firestore
+ * "Unsupported field value: undefined" runtime errors.
+ */
+export const sanitizeForFirestore = <T>(obj: T): T => {
+  if (obj === null || obj === undefined) {
+    return null as any;
+  }
+  if (Array.isArray(obj)) {
+    return obj
+      .filter((item) => item !== undefined)
+      .map((item) => sanitizeForFirestore(item)) as any;
+  }
+  if (typeof obj === 'object' && !(obj instanceof Date)) {
+    const cleaned: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = sanitizeForFirestore(value);
+      }
+    }
+    return cleaned as T;
+  }
+  return obj;
+};
+
 // ==================== FIRESTORE SYNC & SEEDING ====================
 
 export const syncUserProfileToFirestore = async (user: User) => {
   try {
+    const sanitized = sanitizeForFirestore(user);
     const userRef = doc(db, 'users', user.id);
-    await setDoc(userRef, user, { merge: true });
+    await setDoc(userRef, sanitized, { merge: true });
+    console.log(`[Firestore] Synced user profile for: ${user.id}`);
   } catch (err) {
-    console.warn('Could not sync user profile to Firestore:', err);
+    console.error('[Firestore] Could not sync user profile to Firestore:', err);
   }
 };
 
@@ -139,144 +168,162 @@ export const seedDatabaseIfEmpty = async () => {
   try {
     const itemsSnapshot = await getDocs(collection(db, 'items'));
     if (itemsSnapshot.empty) {
-      console.log('Seeding initial community listings to Firestore...');
+      console.log('[Firestore] Database is empty. Seeding initial community listings to Firestore...');
       const batch = writeBatch(db);
 
       // Seed Items
       INITIAL_ITEMS.forEach((item) => {
         const ref = doc(db, 'items', item.id);
-        batch.set(ref, item);
+        batch.set(ref, sanitizeForFirestore(item));
       });
 
       // Seed Claims
       INITIAL_CLAIMS.forEach((claim) => {
         const ref = doc(db, 'claims', claim.id);
-        batch.set(ref, claim);
+        batch.set(ref, sanitizeForFirestore(claim));
       });
 
       // Seed Conversations
       INITIAL_CONVERSATIONS.forEach((conv) => {
         const ref = doc(db, 'conversations', conv.id);
-        batch.set(ref, conv);
+        batch.set(ref, sanitizeForFirestore(conv));
       });
 
       // Seed Messages
       INITIAL_MESSAGES.forEach((msg) => {
         const ref = doc(db, 'messages', msg.id);
-        batch.set(ref, msg);
+        batch.set(ref, sanitizeForFirestore(msg));
       });
 
       // Seed Notifications
       INITIAL_NOTIFICATIONS.forEach((notif) => {
         const ref = doc(db, 'notifications', notif.id);
-        batch.set(ref, notif);
+        batch.set(ref, sanitizeForFirestore(notif));
       });
 
       // Seed Demo Users
       DEMO_USERS.forEach((u) => {
         const ref = doc(db, 'users', u.id);
-        batch.set(ref, u);
+        batch.set(ref, sanitizeForFirestore(u));
       });
 
       await batch.commit();
-      console.log('Database seeded successfully.');
+      console.log('[Firestore] Initial database seeded successfully in collection "items".');
+    } else {
+      console.log(`[Firestore] Found ${itemsSnapshot.docs.length} existing items in Firestore collection.`);
     }
   } catch (err) {
-    console.warn('Firestore seeding check/fallback:', err);
+    console.error('[Firestore] Seeding check/execution error:', err);
   }
 };
 
 // ==================== FIRESTORE ITEM METHODS ====================
 
-export const firestoreAddItem = async (item: Item) => {
+export const firestoreAddItem = async (item: Item): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(item);
     const ref = doc(db, 'items', item.id);
-    await setDoc(ref, item);
+    await setDoc(ref, sanitized);
+    console.log(`[Firestore] Successfully persisted item "${item.id}" (type: ${item.type}) to collection "items"`);
   } catch (error) {
-    console.error('Error saving item to Firestore:', error);
+    console.error(`[Firestore] FAILED to write item "${item.id}" to collection "items":`, error);
     throw error;
   }
 };
 
-export const firestoreUpdateItem = async (itemId: string, updates: Partial<Item>) => {
+export const firestoreUpdateItem = async (itemId: string, updates: Partial<Item>): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(updates);
     const ref = doc(db, 'items', itemId);
-    await updateDoc(ref, updates);
+    await updateDoc(ref, sanitized);
+    console.log(`[Firestore] Successfully updated item "${itemId}" in collection "items"`);
   } catch (error) {
-    console.error('Error updating item in Firestore:', error);
+    console.error(`[Firestore] Error updating item "${itemId}":`, error);
     throw error;
   }
 };
 
-export const firestoreDeleteItem = async (itemId: string) => {
+export const firestoreDeleteItem = async (itemId: string): Promise<void> => {
   try {
     const ref = doc(db, 'items', itemId);
     await deleteDoc(ref);
+    console.log(`[Firestore] Successfully deleted item "${itemId}" from collection "items"`);
   } catch (error) {
-    console.error('Error deleting item from Firestore:', error);
+    console.error(`[Firestore] Error deleting item "${itemId}":`, error);
     throw error;
   }
 };
 
 // ==================== FIRESTORE CLAIM METHODS ====================
 
-export const firestoreAddClaim = async (claim: ClaimRequest) => {
+export const firestoreAddClaim = async (claim: ClaimRequest): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(claim);
     const ref = doc(db, 'claims', claim.id);
-    await setDoc(ref, claim);
+    await setDoc(ref, sanitized);
+    console.log(`[Firestore] Successfully persisted claim "${claim.id}" to collection "claims"`);
   } catch (error) {
-    console.error('Error adding claim to Firestore:', error);
+    console.error(`[Firestore] Error adding claim "${claim.id}":`, error);
     throw error;
   }
 };
 
-export const firestoreUpdateClaim = async (claimId: string, updates: Partial<ClaimRequest>) => {
+export const firestoreUpdateClaim = async (claimId: string, updates: Partial<ClaimRequest>): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(updates);
     const ref = doc(db, 'claims', claimId);
-    await updateDoc(ref, updates);
+    await updateDoc(ref, sanitized);
+    console.log(`[Firestore] Successfully updated claim "${claimId}" in collection "claims"`);
   } catch (error) {
-    console.error('Error updating claim in Firestore:', error);
+    console.error(`[Firestore] Error updating claim "${claimId}":`, error);
     throw error;
   }
 };
 
 // ==================== FIRESTORE CONVERSATION & MESSAGE METHODS ====================
 
-export const firestoreSaveConversation = async (conversation: Conversation) => {
+export const firestoreSaveConversation = async (conversation: Conversation): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(conversation);
     const ref = doc(db, 'conversations', conversation.id);
-    await setDoc(ref, conversation, { merge: true });
+    await setDoc(ref, sanitized, { merge: true });
   } catch (error) {
-    console.error('Error saving conversation to Firestore:', error);
+    console.error('[Firestore] Error saving conversation to Firestore:', error);
+    throw error;
   }
 };
 
-export const firestoreSendMessage = async (message: Message) => {
+export const firestoreSendMessage = async (message: Message): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(message);
     const ref = doc(db, 'messages', message.id);
-    await setDoc(ref, message);
+    await setDoc(ref, sanitized);
   } catch (error) {
-    console.error('Error sending message to Firestore:', error);
+    console.error('[Firestore] Error sending message to Firestore:', error);
     throw error;
   }
 };
 
 // ==================== FIRESTORE NOTIFICATION METHODS ====================
 
-export const firestoreAddNotification = async (notification: Notification) => {
+export const firestoreAddNotification = async (notification: Notification): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(notification);
     const ref = doc(db, 'notifications', notification.id);
-    await setDoc(ref, notification);
+    await setDoc(ref, sanitized);
   } catch (error) {
-    console.error('Error adding notification to Firestore:', error);
+    console.error('[Firestore] Error adding notification to Firestore:', error);
+    throw error;
   }
 };
 
-export const firestoreUpdateNotification = async (notifId: string, updates: Partial<Notification>) => {
+export const firestoreUpdateNotification = async (notifId: string, updates: Partial<Notification>): Promise<void> => {
   try {
+    const sanitized = sanitizeForFirestore(updates);
     const ref = doc(db, 'notifications', notifId);
-    await updateDoc(ref, updates);
+    await updateDoc(ref, sanitized);
   } catch (error) {
-    console.error('Error updating notification in Firestore:', error);
+    console.error('[Firestore] Error updating notification in Firestore:', error);
+    throw error;
   }
 };
