@@ -1,0 +1,6 @@
+{
+  "name": "FindIt - Lost & Found Community",
+  "description": "A modern, trusted lost & found community platform featuring automated match detection, secure ownership verification, real-time messaging, and multi-step reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
