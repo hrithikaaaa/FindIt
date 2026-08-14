@@ -23,11 +23,15 @@ export interface Translations {
 
   // Hero Section
   heroBadge: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroDesc: string;
   heroTitleLine1: string;
   heroTitleLine2: string;
-  heroSubtitle: string;
   heroBtnLost: string;
   heroBtnFound: string;
+  heroReportLost: string;
+  heroReportFound: string;
   heroSearchPlaceholder: string;
   heroSearchBtn: string;
   heroPopular: string;
@@ -39,29 +43,59 @@ export interface Translations {
   heroPrivateClaims: string;
   heroCommunityQuote: string;
 
-  // Recently Reported Section
+  // Recently Reported Section / Live Feed
+  feedBadge: string;
+  feedTitle: string;
+  feedSubtitle: string;
+  feedExploreAll: string;
   recentHeading: string;
   recentSubtitle: string;
   tabAll: string;
   tabLost: string;
   tabFound: string;
+  tabAllItems: string;
+  tabLostItems: string;
+  tabFoundItems: string;
+  categoryAll: string;
   filterAllCategories: string;
   viewAllInExplore: string;
   noItemsFound: string;
   clearFilters: string;
 
-  // Item Card
+  // Item Card & Details
   badgeLost: string;
   badgeFound: string;
   badgeReunited: string;
   badgeActive: string;
+  badgeZeroPII: string;
+  statusReunited: string;
   btnClaim: string;
   btnDetails: string;
+  cardViewDetails: string;
   btnMatchFound: string;
+  btnClaimItem: string;
+  btnContactFinder: string;
+  btnContactOwner: string;
+  markReunitedSuccess: string;
+  itemLocation: string;
+  itemDate: string;
+  itemDescription: string;
+  itemSecretProof: string;
   reportedAgo: string;
   rewardOffered: string;
+  matchesDetected: (count: number) => string;
+  compareSideBySide: string;
 
   // How It Works
+  hiwBadge: string;
+  hiwTitle: string;
+  hiwSubtitle: string;
+  hiwStep1Title: string;
+  hiwStep1Desc: string;
+  hiwStep2Title: string;
+  hiwStep2Desc: string;
+  hiwStep3Title: string;
+  hiwStep3Desc: string;
   howHeading: string;
   howSubtitle: string;
   howStep1Title: string;
@@ -75,6 +109,8 @@ export interface Translations {
   // Two Option Report
   twoOptionHeading: string;
   twoOptionSubtitle: string;
+  reportLostTitle: string;
+  reportFoundTitle: string;
   optLostTitle: string;
   optLostDesc: string;
   optLostBtn: string;
@@ -84,14 +120,29 @@ export interface Translations {
 
   // Stats Section
   statsHeading: string;
+  statsReported: string;
+  statsFound: string;
+  statsReunited: string;
+  statsMembers: string;
   statTotalReports: string;
   statReunitedCount: string;
   statMatchAccuracy: string;
   statActiveUsers: string;
 
   // Trust & Safety
+  safetyBadge: string;
+  safetyTitle: string;
+  safetySubtitle: string;
   trustHeading: string;
   trustSubtitle: string;
+  secZeroPIITitle: string;
+  secZeroPIIDesc: string;
+  secOwnershipTitle: string;
+  secOwnershipDesc: string;
+  secSafeHandoffTitle: string;
+  secSafeHandoffDesc: string;
+  secCommunityTrustTitle: string;
+  secCommunityTrustDesc: string;
   trustPillar1Title: string;
   trustPillar1Desc: string;
   trustPillar2Title: string;
@@ -105,11 +156,27 @@ export interface Translations {
   // Explore & Search Page
   exploreTitle: string;
   exploreSubtitle: string;
+  exploreSearchPlaceholder: string;
   searchFilterKeyword: string;
   searchFilterCategory: string;
   searchFilterCity: string;
   searchFilterStatus: string;
   searchFilterDate: string;
+  filterReportType: string;
+  filterAllTypes: string;
+  filterCategory: string;
+  filterCity: string;
+  filterAllCities: string;
+  filterDateRange: string;
+  filterAnyTime: string;
+  filterPast24h: string;
+  filterPast7d: string;
+  filterPast30d: string;
+  filterStatus: string;
+  filterAllStatuses: string;
+  filterActiveUnresolved: string;
+  showingListingsCount: (count: number) => string;
+  sortBy: string;
   sortByLabel: string;
   sortNewest: string;
   sortOldest: string;
@@ -117,7 +184,6 @@ export interface Translations {
   showingResults: string;
   statusAll: string;
   statusActive: string;
-  statusReunited: string;
   dateAll: string;
   dateToday: string;
   dateThisWeek: string;
@@ -149,6 +215,9 @@ export interface Translations {
   dashMarkCompleted: string;
 
   // Modals & Forms
+  matchModalTitle: string;
+  matchModalSubtitle: string;
+  matchConfidence: string;
   modalItemDetails: string;
   modalClose: string;
   modalLocation: string;
@@ -208,9 +277,17 @@ export interface Translations {
 
   // Footer
   footerAbout: string;
+  footerDesc: string;
+  footerAlertsLabel: string;
+  footerEmailPlaceholder: string;
   footerSubscribeTitle: string;
   footerSubscribeBtn: string;
   footerSubscribedSuccess: string;
+  footerColExplore: string;
+  footerColAction: string;
+  footerColTrust: string;
+  footerSupport: string;
+  footerCopyright: string;
   footerQuickNav: string;
   footerTakeAction: string;
   footerTrustLegal: string;
@@ -246,14 +323,18 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     heroBadge: 'Smart Match Detection Engine & Verified Returns',
+    heroTitle: 'Lost Something?',
+    heroSubtitle: 'Let’s Help You Find It.',
+    heroDesc: 'A trusted community platform to report lost and found items and reunite people with what matters to them. Fast reports, automated match alerts, and verified handoffs.',
     heroTitleLine1: 'Lost Something?',
     heroTitleLine2: 'Let’s Help You Find It.',
-    heroSubtitle: 'A trusted community platform to report lost and found items and reunite people with what matters to them. Fast reports, automated match alerts, and verified handoffs.',
     heroBtnLost: 'Report Lost Item',
     heroBtnFound: 'Report Found Item',
+    heroReportLost: 'Report Lost Item',
+    heroReportFound: 'Report Found Item',
     heroSearchPlaceholder: 'Search backpack, AirPods, keys, wallet, college library...',
     heroSearchBtn: 'Search',
-    heroPopular: 'Popular:',
+    heroPopular: 'Popular',
     heroReunitedToday: 'Reunited Today',
     heroMatchScore: 'Match',
     heroPossibleMatch: 'Possible Match',
@@ -262,29 +343,59 @@ export const translations: Record<Language, Translations> = {
     heroPrivateClaims: 'Private Claims',
     heroCommunityQuote: '“Helping communities reconnect with lost belongings.”',
 
-    // Recently Reported Section
+    // Recently Reported Section / Live Feed
+    feedBadge: 'Live Community Feed',
+    feedTitle: 'Recently Reported',
+    feedSubtitle: 'Browse recently lost and found items in your local area. Filter by status or category to help reconnect.',
+    feedExploreAll: 'Explore All Community Listings',
     recentHeading: 'Recent Lost & Found Reports',
     recentSubtitle: 'Browse recent items reported across campuses, transit stations, and local neighborhoods.',
     tabAll: 'All Items',
     tabLost: 'Lost Items',
     tabFound: 'Found Items',
+    tabAllItems: 'All Items',
+    tabLostItems: 'Lost Items',
+    tabFoundItems: 'Found Items',
+    categoryAll: 'All Categories',
     filterAllCategories: 'All Categories',
     viewAllInExplore: 'View All in Search & Explore →',
-    noItemsFound: 'No items match the selected criteria.',
+    noItemsFound: 'No matching items found.',
     clearFilters: 'Clear All Filters',
 
-    // Item Card
+    // Item Card & Details
     badgeLost: 'LOST',
     badgeFound: 'FOUND',
     badgeReunited: 'REUNITED 🎉',
     badgeActive: 'Active Search',
+    badgeZeroPII: 'Zero Public PII',
+    statusReunited: 'Reunited',
     btnClaim: 'Claim Ownership',
     btnDetails: 'View Details',
+    cardViewDetails: 'View Details',
     btnMatchFound: 'Match Detected',
+    btnClaimItem: 'I Think This Is Mine',
+    btnContactFinder: 'Contact Finder',
+    btnContactOwner: 'Message Owner',
+    markReunitedSuccess: 'Mark as Successfully Reunited 🎉',
+    itemLocation: 'Location',
+    itemDate: 'Date & Time',
+    itemDescription: 'Description',
+    itemSecretProof: 'Identifying Characteristics',
     reportedAgo: 'Reported',
     rewardOffered: 'Reward Offered',
+    matchesDetected: (count: number) => `Possible Matches Detected (${count})`,
+    compareSideBySide: 'Compare Side-by-Side',
 
     // How It Works
+    hiwBadge: 'Simple 3-Step Process',
+    hiwTitle: 'How FindIt Reconnects Communities',
+    hiwSubtitle: 'Designed for speed, clarity, and safety. Every step is built to eliminate friction and ensure items return to their true owners.',
+    hiwStep1Title: 'Quick & Structured Listing',
+    hiwStep1Desc: 'Upload photos, pin the location, and describe key identifying marks or characteristics through our intuitive wizard.',
+    hiwStep2Title: 'Smart Match Intelligence',
+    hiwStep2Desc: 'Our automated matching algorithm instantly cross-references dates, categories, keywords, and locations to find potential matches.',
+    hiwStep3Title: 'Safe & Verified Handoff',
+    hiwStep3Desc: 'Send secure ownership verification requests without publicly exposing personal phone numbers or email addresses.',
     howHeading: 'How FindIt Works',
     howSubtitle: 'A straightforward, secure three-step process built to safely reconnect people with lost items.',
     howStep1Title: '1. Report & Catalog',
@@ -298,6 +409,8 @@ export const translations: Record<Language, Translations> = {
     // Two Option Report
     twoOptionHeading: 'Ready to take action?',
     twoOptionSubtitle: 'Whether you lost a cherished possession or found an item someone is looking for, every report matters.',
+    reportLostTitle: 'I Lost Something',
+    reportFoundTitle: 'I Found Something',
     optLostTitle: 'I Lost Something',
     optLostDesc: 'Create a report with photos, location, and optional reward. Our community and match engine will alert you instantly.',
     optLostBtn: 'Report Lost Belonging',
@@ -307,14 +420,29 @@ export const translations: Record<Language, Translations> = {
 
     // Stats Section
     statsHeading: 'Community Impact & Trust',
+    statsReported: 'Items Reported',
+    statsFound: 'Items Found',
+    statsReunited: 'Items Reunited',
+    statsMembers: 'Community Members',
     statTotalReports: 'Items Reported',
     statReunitedCount: 'Successfully Reunited',
     statMatchAccuracy: 'Smart Match Rate',
     statActiveUsers: 'Active Neighbors',
 
     // Trust & Safety
+    safetyBadge: 'Community Standards & Protection',
+    safetyTitle: 'Built for Safe & Responsible Returns.',
+    safetySubtitle: 'We put community safety first. Advanced verification tools and zero public contact details ensure you can reunite with lost property securely.',
     trustHeading: 'Built with Trust & Privacy at Core',
     trustSubtitle: 'We safeguard your personal information while maximizing the chances of successful returns.',
+    secZeroPIITitle: 'Private Contact Information',
+    secZeroPIIDesc: 'Your personal phone numbers and private email addresses are never shown publicly on listings. All communications occur through our secure in-app messaging channel.',
+    secOwnershipTitle: 'Verified Ownership',
+    secOwnershipDesc: 'Finders can ask specific verification questions (hidden engravings, wallpaper descriptions, serial parts) before releasing custody of high-value items.',
+    secSafeHandoffTitle: 'Safe Handoff Guidelines',
+    secSafeHandoffDesc: 'Community members and moderators can immediately flag inappropriate, suspicious, or duplicate claims to safeguard student and resident belongings.',
+    secCommunityTrustTitle: 'Community Driven Trust',
+    secCommunityTrustDesc: 'Members earn reputation score points for reporting found items, prompt handoffs, and honest returns, creating an accountable and helpful network.',
     trustPillar1Title: 'Zero Public Contact Info',
     trustPillar1Desc: 'Never expose your phone number or email publicly. Communicate safely through built-in anonymous messaging.',
     trustPillar2Title: 'Proof of Ownership',
@@ -326,34 +454,49 @@ export const translations: Record<Language, Translations> = {
     trustExploreGuidelines: 'Read Full Safety & Verification Guidelines →',
 
     // Explore & Search Page
-    exploreTitle: 'Search & Explore Items',
-    exploreSubtitle: 'Filter through active lost and found reports by location, category, date, and keywords.',
+    exploreTitle: 'Search & Discovery',
+    exploreSubtitle: 'Browse community reports, apply targeted filters, or search specific campus spots.',
+    exploreSearchPlaceholder: 'Search lost or found items by keyword, serial, color, landmark...',
     searchFilterKeyword: 'Search keywords, brands, items...',
     searchFilterCategory: 'Select Category',
     searchFilterCity: 'City / Campus',
     searchFilterStatus: 'Item Status',
     searchFilterDate: 'Date Range',
+    filterReportType: 'Report Type',
+    filterAllTypes: 'All (Lost & Found)',
+    filterCategory: 'Category',
+    filterCity: 'City / Region',
+    filterAllCities: 'All Cities',
+    filterDateRange: 'Date Range',
+    filterAnyTime: 'Any Time',
+    filterPast24h: 'Past 24 Hours',
+    filterPast7d: 'Past 7 Days',
+    filterPast30d: 'Past 30 Days',
+    filterStatus: 'Status',
+    filterAllStatuses: 'All Statuses',
+    filterActiveUnresolved: 'Active (Unresolved)',
+    showingListingsCount: (count: number) => `Showing ${count} listings`,
+    sortBy: 'Sort by',
     sortByLabel: 'Sort By:',
     sortNewest: 'Newest First',
     sortOldest: 'Oldest First',
-    sortTitle: 'Alphabetical',
+    sortTitle: 'Title (A-Z)',
     showingResults: 'Showing items',
     statusAll: 'All Statuses',
     statusActive: 'Active Only',
-    statusReunited: 'Reunited Only',
     dateAll: 'All Time',
     dateToday: 'Today',
     dateThisWeek: 'This Week',
     dateThisMonth: 'This Month',
-    resetAllFilters: 'Reset Filters',
+    resetAllFilters: 'Reset all filters',
     gridView: 'Grid View',
     listView: 'List View',
 
     // User Dashboard
     dashTitle: 'Member Dashboard',
     dashOverview: 'Overview',
-    dashMyLost: 'My Lost Items',
-    dashMyFound: 'My Found Items',
+    dashMyLost: 'My Lost Reports',
+    dashMyFound: 'My Found Posts',
     dashMatches: 'Possible Matches',
     dashMessages: 'Messages & Handoffs',
     dashClaims: 'Ownership Claims',
@@ -372,6 +515,9 @@ export const translations: Record<Language, Translations> = {
     dashMarkCompleted: 'Mark as Successfully Reunited 🎉',
 
     // Modals & Forms
+    matchModalTitle: 'Possible Match Found',
+    matchModalSubtitle: 'Our system detected significant correlation between these two listings.',
+    matchConfidence: 'Match Confidence',
     modalItemDetails: 'Item Details',
     modalClose: 'Close',
     modalLocation: 'Location',
@@ -431,9 +577,17 @@ export const translations: Record<Language, Translations> = {
 
     // Footer
     footerAbout: 'FindIt Community Network',
+    footerDesc: 'Helping communities reconnect with what matters. A secure, modern platform powered by automated match detection, verified ownership protection, and neighbor-to-neighbor trust.',
+    footerAlertsLabel: 'Get local lost & found alerts in your neighborhood',
+    footerEmailPlaceholder: 'Enter your email address',
     footerSubscribeTitle: 'Get local lost & found alerts in your neighborhood',
     footerSubscribeBtn: 'Subscribe',
     footerSubscribedSuccess: 'Subscribed to Community Alerts!',
+    footerColExplore: 'Explore Community',
+    footerColAction: 'Take Action',
+    footerColTrust: 'Trust & Legal',
+    footerSupport: 'Contact Support',
+    footerCopyright: `© ${new Date().getFullYear()} FindIt Community Network. Built for safe and responsible returns.`,
     footerQuickNav: 'Explore Community',
     footerTakeAction: 'Take Action',
     footerTrustLegal: 'Trust & Legal',
@@ -467,14 +621,18 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     heroBadge: 'ಸ್ಮಾರ್ಟ್ ಮ್ಯಾಚ್ ಡಿಟೆಕ್ಷನ್ ಎಂಜಿನ್ & ಪರಿಶೀಲಿಸಿದ ಹಸ್ತಾಂತರ',
+    heroTitle: 'ಏನಾದರೂ ಕಳೆದುಹೋಗಿದೆಯೇ?',
+    heroSubtitle: 'ಅದನ್ನು ಹುಡುಕಲು ನಾವು ಸಹಾಯ ಮಾಡುತ್ತೇವೆ.',
+    heroDesc: 'ಕಳೆದುಹೋದ ಮತ್ತು ಸಿಕ್ಕ ವಸ್ತುಗಳನ್ನು ವರದಿ ಮಾಡಲು ಹಾಗೂ ಅವುಗಳನ್ನು ಸರಿಯಾದ ಮಾಲೀಕರಿಗೆ ಮರಳಿಸಲು ನಂಬಿಕಸ್ಥ ಸಮುದಾಯ ವೇದಿಕೆ. ವೇಗದ ವರದಿಗಳು, ಸ್ವಯಂಚಾಲಿತ ಹೊಂದಾಣಿಕೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಪರಿಶೀಲನೆ.',
     heroTitleLine1: 'ಏನಾದರೂ ಕಳೆದುಹೋಗಿದೆಯೇ?',
     heroTitleLine2: 'ಅದನ್ನು ಹುಡುಕಲು ನಾವು ಸಹಾಯ ಮಾಡುತ್ತೇವೆ.',
-    heroSubtitle: 'ಕಳೆದುಹೋದ ಮತ್ತು ಸಿಕ್ಕ ವಸ್ತುಗಳನ್ನು ವರದಿ ಮಾಡಲು ಹಾಗೂ ಅವುಗಳನ್ನು ಸರಿಯಾದ ಮಾಲೀಕರಿಗೆ ಮರಳಿಸಲು ನಂಬಿಕಸ್ಥ ಸಮುದಾಯ ವೇದಿಕೆ. ವೇಗದ ವರದಿಗಳು, ಸ್ವಯಂಚಾಲಿತ ಹೊಂದಾಣಿಕೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಪರಿಶೀಲನೆ.',
     heroBtnLost: 'ಕಳೆದುಹೋದ ವರದಿ ಸಲ್ಲಿಸಿ',
     heroBtnFound: 'ಸಿಕ್ಕ ವಸ್ತು ವರದಿ ಸಲ್ಲಿಸಿ',
+    heroReportLost: 'ಕಳೆದುಹೋದ ವಸ್ತು ವರದಿ ಮಾಡಿ',
+    heroReportFound: 'ಸಿಕ್ಕ ವಸ್ತು ವರದಿ ಮಾಡಿ',
     heroSearchPlaceholder: 'ಬ್ಯಾಕ್‌ಪ್ಯಾಕ್, ಏರ್‌ಪಾಡ್ಸ್, ಕೀಗಳು, ವಾಲೆಟ್, ಕಾಲೇಜು ಗ್ರಂಥಾಲಯ ಹುಡುಕಿ...',
     heroSearchBtn: 'ಹುಡುಕಿ',
-    heroPopular: 'ಜನಪ್ರಿಯ:',
+    heroPopular: 'ಜನಪ್ರಿಯ',
     heroReunitedToday: 'ಇಂದು ಮರಳಿಸಲಾಗಿದೆ',
     heroMatchScore: 'ಹೊಂದಾಣಿಕೆ',
     heroPossibleMatch: 'ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆ',
@@ -483,29 +641,59 @@ export const translations: Record<Language, Translations> = {
     heroPrivateClaims: 'ಖಾಸಗಿ ಹಕ್ಕು ಕೋರಿಕೆ',
     heroCommunityQuote: '“ಜನರ ಕಳೆದುಹೋದ ಪ್ರಮುಖ ವಸ್ತುಗಳನ್ನು ಮರಳಿ ತಲುಪಿಸುವ ಸಮುದಾಯ ಸೇವೆ.”',
 
-    // Recently Reported Section
+    // Recently Reported Section / Live Feed
+    feedBadge: 'ಲೈವ್ ಸಮುದಾಯ ಫೀಡ್',
+    feedTitle: 'ಇತ್ತೀಚಿನ ವರದಿಗಳು',
+    feedSubtitle: 'ನಿಮ್ಮ ಸುತ್ತಮುತ್ತಲಿನ ಇತ್ತೀಚಿನ ಕಳೆದುಹೋದ ಮತ್ತು ದೊರೆತ ವಸ್ತುಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ.',
+    feedExploreAll: 'ಎಲ್ಲಾ ಸಮುದಾಯ ಪಟ್ಟಿಗಳನ್ನು ನೋಡಿ',
     recentHeading: 'ಇತ್ತೀಚಿನ ಕಳೆದುಹೋದ & ಸಿಕ್ಕ ವಸ್ತುಗಳ ವರದಿಗಳು',
     recentSubtitle: 'ಕಾಲೇಜು ಕ್ಯಾಂಪಸ್‌ಗಳು, ಸಾರಿಗೆ ನಿಲ್ದಾಣಗಳು ಮತ್ತು ಸುತ್ತಮುತ್ತಲಿನ ಪ್ರದೇಶಗಳಲ್ಲಿ ವರದಿಯಾದ ಇತ್ತೀಚಿನ ವಸ್ತುಗಳನ್ನು ನೋಡಿ.',
     tabAll: 'ಎಲ್ಲಾ ವಸ್ತುಗಳು',
     tabLost: 'ಕಳೆದುಹೋದ ವಸ್ತುಗಳು',
     tabFound: 'ಸಿಕ್ಕ ವಸ್ತುಗಳು',
+    tabAllItems: 'ಎಲ್ಲಾ ವಸ್ತುಗಳು',
+    tabLostItems: 'ಕಳೆದುಹೋದ ವಸ್ತುಗಳು',
+    tabFoundItems: 'ಸಿಕ್ಕ ವಸ್ತುಗಳು',
+    categoryAll: 'ಎಲ್ಲಾ ವಿಭಾಗಗಳು',
     filterAllCategories: 'ಎಲ್ಲಾ ವಿಭಾಗಗಳು',
     viewAllInExplore: 'ಹುಡುಕಾಟ ಪುಟದಲ್ಲಿ ಎಲ್ಲವನ್ನೂ ನೋಡಿ →',
-    noItemsFound: 'ಆಯ್ಕೆಮಾಡಿದ ಮಾನದಂಡಗಳಿಗೆ ಯಾವುದೇ ವಸ್ತುಗಳು ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ.',
+    noItemsFound: 'ಯಾವುದೇ ವಸ್ತುಗಳು ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ.',
     clearFilters: 'ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ',
 
-    // Item Card
+    // Item Card & Details
     badgeLost: 'ಕಳೆದುಹೋಗಿದೆ',
     badgeFound: 'ಸಿಕ್ಕಿದೆ',
     badgeReunited: 'ಮರಳಿಸಲಾಗಿದೆ 🎉',
     badgeActive: 'ಸಕ್ರಿಯ ಹುಡುಕಾಟ',
+    badgeZeroPII: 'ಶೂನ್ಯ ಸಾರ್ವಜನಿಕ ಮಾಹಿತಿ',
+    statusReunited: 'ಮರಳಿಸಲಾಗಿದೆ',
     btnClaim: 'ಸ್ವಾಮ್ಯ ಹಕ್ಕು ಪಡೆಯಿರಿ',
     btnDetails: 'ವಿವರ ನೋಡಿ',
+    cardViewDetails: 'ವಿವರ ನೋಡಿ',
     btnMatchFound: 'ಹೊಂದಾಣಿಕೆ ಪತ್ತೆಯಾಗಿದೆ',
+    btnClaimItem: 'ಇದು ನನ್ನದೇ ವಸ್ತು',
+    btnContactFinder: 'ಹುಡುಕಿದವರನ್ನು ಸಂಪರ್ಕಿಸಿ',
+    btnContactOwner: 'ಮಾಲೀಕರಿಗೆ ಸಂದೇಶ ಕಳುಹಿಸಿ',
+    markReunitedSuccess: 'ಯಶಸ್ವಿಯಾಗಿ ಮರಳಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ 🎉',
+    itemLocation: 'ಸ್ಥಳ',
+    itemDate: 'ದಿನಾಂಕ & ಸಮಯ',
+    itemDescription: 'ವಿವರಣೆ',
+    itemSecretProof: 'ಗುರುತುಗಳು & ರಹಸ್ಯ ಲಕ್ಷಣಗಳು',
     reportedAgo: 'ವರದಿ ದಿನಾಂಕ',
     rewardOffered: 'ಬಹುಮಾನ ನಿಗದಿಯಾಗಿದೆ',
+    matchesDetected: (count: number) => `ಪತ್ತೆಯಾದ ಹೊಂದಾಣಿಕೆಗಳು (${count})`,
+    compareSideBySide: 'ಪಕ್ಕ-ಪಕ್ಕದಲ್ಲಿ ವಿವರ ಹೋಲಿಸಿ',
 
     // How It Works
+    hiwBadge: '೩ ಸುಲಭ ಹಂತಗಳ ಪ್ರಕ್ರಿಯೆ',
+    hiwTitle: 'ಫೈಂಡ್‌ಇಟ್ ಹೇಗೆ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ?',
+    hiwSubtitle: 'ವೇಗ, ಸ್ಪಷ್ಟತೆ ಮತ್ತು ಸುರಕ್ಷತೆಗಾಗಿ ವಿನ್ಯಾಸಗೊಳಿಸಲಾಗಿದೆ. ವಸ್ತುಗಳು ತಮ್ಮ ನಿಜವಾದ ಮಾಲೀಕರನ್ನು ತಲುಪುವುದನ್ನು ಖಚಿತಪಡಿಸುತ್ತದೆ.',
+    hiwStep1Title: 'ತ್ವರಿತ & ರಚನಾತ್ಮಕ ವರದಿ',
+    hiwStep1Desc: 'ಫೋಟೋಗಳನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿ, ಸ್ಥಳವನ್ನು ಪಿನ್ ಮಾಡಿ ಮತ್ತು ಪ್ರಮುಖ ಗುರುತುಗಳನ್ನು ನಮ್ಮ ಸುಲಭ ವಿಜಾರ್ಡ್ ಮೂಲಕ ದಾಖಲಿಸಿ.',
+    hiwStep2Title: 'ಸ್ಮಾರ್ಟ್ ಹೊಂದಾಣಿಕೆ ಜ್ಞಾನ',
+    hiwStep2Desc: 'ನಮ್ಮ ಹೊಂದಾಣಿಕೆ ಆಲ್ಗಾರಿದಮ್ ದಿನಾಂಕಗಳು, ವಿಭಾಗಗಳು, ಕೀವರ್ಡ್‌ಗಳು ಮತ್ತು ಸ್ಥಳಗಳನ್ನು ವಿಶ್ಲೇಷಿಸಿ ಹೊಂದಾಣಿಕೆಗಳನ್ನು ಹುಡುಕುತ್ತದೆ.',
+    hiwStep3Title: 'ಸುರಕ್ಷಿತ & ಪರಿಶೀಲಿಸಿದ ಹಸ್ತಾಂತರ',
+    hiwStep3Desc: 'ವೈಯಕ್ತಿಕ ಫೋನ್ ಸಂಖ್ಯೆಗಳನ್ನು ಬಹಿರಂಗಪಡಿಸದೆ ಸುರಕ್ಷಿತ ಮಾಲೀಕತ್ವ ಪರಿಶೀಲನೆ ವಿನಂತಿಗಳನ್ನು ಕಳುಹಿಸಿ.',
     howHeading: 'ಫೈಂಡ್‌ಇಟ್ ಹೇಗೆ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ?',
     howSubtitle: 'ಕಳೆದುಹೋದ ವಸ್ತುಗಳನ್ನು ಅವುಗಳ ಮಾಲೀಕರಿಗೆ ಸುರಕ್ಷಿತವಾಗಿ ಮರಳಿಸಲು ರೂಪಿಸಲಾದ 3 ಸುಲಭ ಹಂತಗಳು.',
     howStep1Title: '೧. ವರದಿ & ನೋಂದಣಿ',
@@ -519,6 +707,8 @@ export const translations: Record<Language, Translations> = {
     // Two Option Report
     twoOptionHeading: 'ವರದಿ ಮಾಡಲು ಸಿದ್ಧರಿದ್ದೀರಾ?',
     twoOptionSubtitle: 'ನೀವು ಯಾವುದೇ ಬೆಲೆಬಾಳುವ ವಸ್ತುವನ್ನು ಕಳೆದುಕೊಂಡಿರಲಿ ಅಥವಾ ಬೇರೆಯವರ ವಸ್ತು ನಿಮಗೆ ಸಿಕ್ಕಿರಲಿ, ನಿಮ್ಮ ಪ್ರತಿ ವರದಿಯೂ ಮುಖ್ಯವಾಗಿದೆ.',
+    reportLostTitle: 'ನಾನು ಕಳೆದುಕೊಂಡಿದ್ದೇನೆ',
+    reportFoundTitle: 'ನನಗೆ ವಸ್ತು ಸಿಕ್ಕಿದೆ',
     optLostTitle: 'ನಾನು ಕಳೆದುಕೊಂಡಿದ್ದೇನೆ',
     optLostDesc: 'ಫೋಟೋಗಳು ಮತ್ತು ಸ್ಥಳದ ವಿವರಗಳೊಂದಿಗೆ ವರದಿ ರಚಿಸಿ. ಹೊಂದಾಣಿಕೆ ಕಂಡುಬಂದಾಗ ನಮ್ಮ ವ್ಯವಸ್ಥೆಯು ನಿಮಗೆ ತಕ್ಷಣ ಮಾಹಿತಿ ನೀಡುತ್ತದೆ.',
     optLostBtn: 'ಕಳೆದುಹೋದ ವಸ್ತು ವರದಿ ಮಾಡಿ',
@@ -528,14 +718,29 @@ export const translations: Record<Language, Translations> = {
 
     // Stats Section
     statsHeading: 'ಸಮುದಾಯದ ಪ್ರಭಾವ ಮತ್ತು ಸಾಧನೆ',
+    statsReported: 'ದಾಖಲಾದ ವರದಿಗಳು',
+    statsFound: 'ದೊರೆತ ವಸ್ತುಗಳು',
+    statsReunited: 'ಮರಳಿಸಿದ ವಸ್ತುಗಳು',
+    statsMembers: 'ಸಮುದಾಯ ಸದಸ್ಯರು',
     statTotalReports: 'ದಾಖಲಾದ ವರದಿಗಳು',
     statReunitedCount: 'ಯಶಸ್ವಿಯಾಗಿ ಮರಳಿಸಿದ ವಸ್ತುಗಳು',
     statMatchAccuracy: 'ಸ್ಮಾರ್ಟ್ ಹೊಂದಾಣಿಕೆ ದರ',
     statActiveUsers: 'ಸಕ್ರಿಯ ಬಳಕೆದಾರರು',
 
     // Trust & Safety
+    safetyBadge: 'ಸಮುದಾಯ ಸುರಕ್ಷತಾ ಮಾನದಂಡಗಳು',
+    safetyTitle: 'ಸುರಕ್ಷಿತ ಮತ್ತು ಜವಾಬ್ದಾರಿಯುತ ಮರಳಿಸುವಿಕೆಗಾಗಿ ನಿರ್ಮಿಸಲಾಗಿದೆ.',
+    safetySubtitle: 'ನಾವು ಸಮುದಾಯದ ಸುರಕ್ಷತೆಗೆ ಪ್ರಥಮ ಆದ್ಯತೆ ನೀಡುತ್ತೇವೆ. ಸುಧಾರಿತ ಪರಿಶೀಲನಾ ಸಾಧನಗಳು ನಿಮ್ಮ ವಸ್ತುಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿ ಮರಳಿ ಪಡೆಯಲು ನೆರವಾಗುತ್ತವೆ.',
     trustHeading: 'ಗರಿಷ್ಠ ಗೌಪ್ಯತೆ ಮತ್ತು ಸುರಕ್ಷತೆಯೊಂದಿಗೆ ವಿನ್ಯಾಸ',
     trustSubtitle: 'ವಸ್ತುಗಳು ಮರಳುವ ಸಾಧ್ಯತೆಯನ್ನು ಹೆಚ್ಚಿಸುತ್ತಲೇ ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ನಾವು ಸಂಪೂರ್ಣ ರಕ್ಷಿಸುತ್ತೇವೆ.',
+    secZeroPIITitle: 'ಖಾಸಗಿ ಸಂಪರ್ಕ ಮಾಹಿತಿ',
+    secZeroPIIDesc: 'ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಥವಾ ಇಮೇಲ್ ಸಾರ್ವಜನಿಕವಾಗಿ ಬಹಿರಂಗವಾಗುವುದಿಲ್ಲ. ಎಲ್ಲಾ ಸಂಭಾಷಣೆಗಳು ಆ್ಯಪ್ ಒಳಗಿನ ಸುರಕ್ಷಿತ ಸಂದೇಶಗಳ ಮೂಲಕವೇ ನಡೆಯುತ್ತವೆ.',
+    secOwnershipTitle: 'ಸ್ವಾಮ್ಯತೆಯ ಪುರಾವೆ ಪರಿಶೀಲನೆ',
+    secOwnershipDesc: 'ವಸ್ತು ಸಿಕ್ಕವರು ಗೌಪ್ಯ ಗುರುತುಗಳು ಅಥವಾ ರಹಸ್ಯ ಪ್ರಶ್ನೆಗಳ ಮೂಲಕ ನಿಜವಾದ ಮಾಲೀಕರನ್ನು ಪರಿಶೀಲಿಸಬಹುದು.',
+    secSafeHandoffTitle: 'ಸುರಕ್ಷಿತ ಹಸ್ತಾಂತರ ಮಾರ್ಗಸೂಚಿಗಳು',
+    secSafeHandoffDesc: 'ಅನುಮಾನಾಸ್ಪದ ಅಥವಾ ನಕಲಿ ಕ್ಲೈಮ್‌ಗಳನ್ನು ತಕ್ಷಣವೇ ಫ್ಲ್ಯಾಗ್ ಮಾಡಿ ಸಮುದಾಯದ ರಕ್ಷಣೆಯನ್ನು ಕಾಪಾಡಬಹುದು.',
+    secCommunityTrustTitle: 'ಸಮುದಾಯ ವಿಶ್ವಾಸಾರ್ಹತೆ',
+    secCommunityTrustDesc: 'ಪ್ರಾಮಾಣಿಕವಾಗಿ ವಸ್ತುಗಳನ್ನು ಮರಳಿಸಿದವರಿಗೆ ಸಮುದಾಯದಲ್ಲಿ ಪ್ರತಿಷ್ಠೆಯ ಅಂಕಗಳನ್ನು ನೀಡಲಾಗುತ್ತದೆ.',
     trustPillar1Title: 'ಸಾರ್ವಜನಿಕ ಸಂಪರ್ಕ ಸಂಖ್ಯೆ ಮುಕ್ತವಲ್ಲ',
     trustPillar1Desc: 'ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಥವಾ ಇಮೇಲ್ ಸಾರ್ವಜನಿಕವಾಗಿ ಬಹಿರಂಗವಾಗುವುದಿಲ್ಲ. ಆ್ಯಪ್ ಒಳಗಿನ ಸುರಕ್ಷಿತ ಚಾಟ್ ಮೂಲಕ ಸಂವಹನ ನಡೆಸಿ.',
     trustPillar2Title: 'ಸ್ವಾಮ್ಯತೆಯ ಪುರಾವೆ ಪರಿಶೀಲನೆ',
@@ -547,34 +752,49 @@ export const translations: Record<Language, Translations> = {
     trustExploreGuidelines: 'ಸಂಪೂರ್ಣ ಸುರಕ್ಷತಾ ಮಾರ್ಗಸೂಚಿಗಳನ್ನು ಓದಿ →',
 
     // Explore & Search Page
-    exploreTitle: 'ವಸ್ತುಗಳನ್ನು ಹುಡುಕಿ & ಅನ್ವೇಷಿಸಿ',
-    exploreSubtitle: 'ಸ್ಥಳ, ವಿಭಾಗ, ದಿನಾಂಕ ಮತ್ತು ಕೀವರ್ಡ್‌ಗಳ ಮೂಲಕ ಕಳೆದುಹೋದ ಹಾಗೂ ಸಿಕ್ಕ ವಸ್ತುಗಳನ್ನು ಫಿಲ್ಟರ್ ಮಾಡಿ.',
+    exploreTitle: 'ಹುಡುಕಾಟ & ಅನ್ವೇಷಣೆ',
+    exploreSubtitle: 'ಸಮುದಾಯದ ವರದಿಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ, ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಅನ್ವಯಿಸಿ ಅಥವಾ ನಿರ್ದಿಷ್ಟ ಸ್ಥಳಗಳನ್ನು ಹುಡುಕಿ.',
+    exploreSearchPlaceholder: 'ಕೀವರ್ಡ್, ಸೀರಿಯಲ್ ನಂಬರ್, ಬಣ್ಣ, ಸ್ಥಳದ ಮೂಲಕ ಕಳೆದುಹೋದ ಅಥವಾ ದೊರೆತ ವಸ್ತುಗಳನ್ನು ಹುಡುಕಿ...',
     searchFilterKeyword: 'ಕೀವರ್ಡ್, ಬ್ರ್ಯಾಂಡ್ ಅಥವಾ ವಸ್ತು ಹುಡುಕಿ...',
     searchFilterCategory: 'ವಿಭಾಗ ಆಯ್ಕೆಮಾಡಿ',
     searchFilterCity: 'ನಗರ / ಕ್ಯಾಂಪಸ್',
     searchFilterStatus: 'ವಸ್ತುವಿನ ಸ್ಥಿತಿ',
     searchFilterDate: 'ದಿನಾಂಕ ಶ್ರೇಣಿ',
+    filterReportType: 'ವರದಿ ಪ್ರಕಾರ',
+    filterAllTypes: 'ಎಲ್ಲಾ (ಕಳೆದುಹೋದ & ದೊರೆತ)',
+    filterCategory: 'ವಿಭಾಗ',
+    filterCity: 'ನಗರ / ಪ್ರದೇಶ',
+    filterAllCities: 'ಎಲ್ಲಾ ನಗರಗಳು',
+    filterDateRange: 'ದಿನಾಂಕ ಶ್ರೇಣಿ',
+    filterAnyTime: 'ಎಲ್ಲಾ ಸಮಯ',
+    filterPast24h: 'ಕಳೆದ 24 ಗಂಟೆಗಳು',
+    filterPast7d: 'ಕಳೆದ 7 ದಿನಗಳು',
+    filterPast30d: 'ಕಳೆದ 30 ದಿನಗಳು',
+    filterStatus: 'ಸ್ಥಿತಿ',
+    filterAllStatuses: 'ಎಲ್ಲಾ ಸ್ಥಿತಿಗಳು',
+    filterActiveUnresolved: 'ಸಕ್ರಿಯ (ಇನ್ನೂ ಸಿಕ್ಕಿಲ್ಲ)',
+    showingListingsCount: (count: number) => `${count} ಪಟ್ಟಿಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ`,
+    sortBy: 'ವಿಂಗಡಿಸಿ',
     sortByLabel: 'ವಿಂಗಡಿಸಿ:',
     sortNewest: 'ಹೊಸದು ಮೊದಲು',
     sortOldest: 'ಹಳೆಯದು ಮೊದಲು',
-    sortTitle: 'ಅಕ್ಷರಾನುಕ್ರಮ',
+    sortTitle: 'ಶೀರ್ಷಿಕೆ (A-Z)',
     showingResults: 'ವಸ್ತುಗಳು ಪ್ರದರ್ಶನಗೊಳ್ಳುತ್ತಿವೆ',
     statusAll: 'ಎಲ್ಲಾ ಸ್ಥಿತಿಗಳು',
     statusActive: 'ಸಕ್ರಿಯ ಮಾತ್ರ',
-    statusReunited: 'ಮರಳಿಸಿದವು ಮಾತ್ರ',
     dateAll: 'ಎಲ್ಲಾ ಸಮಯ',
     dateToday: 'ಇಂದು',
     dateThisWeek: 'ಈ ವಾರ',
     dateThisMonth: 'ಈ ತಿಂಗಳು',
-    resetAllFilters: 'ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಮರುಹೊಂದಿಸಿ',
+    resetAllFilters: 'ಎಲ್ಲಾ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಮರುಹೊಂದಿಸಿ',
     gridView: 'ಗ್ರಿಡ್ ನೋಟ',
     listView: 'ಪಟ್ಟಿ ನೋಟ',
 
     // User Dashboard
     dashTitle: 'ಬಳಕೆದಾರರ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
     dashOverview: 'ಅವಲೋಕನ',
-    dashMyLost: 'ನನ್ನ ಕಳೆದುಹೋದ ವಸ್ತುಗಳು',
-    dashMyFound: 'ನನ್ನ ಸಿಕ್ಕ ವಸ್ತುಗಳು',
+    dashMyLost: 'ನನ್ನ ಕಳೆದುಹೋದ ವರದಿಗಳು',
+    dashMyFound: 'ನನ್ನ ದೊರೆತ ಪೋಸ್ಟ್‌ಗಳು',
     dashMatches: 'ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆಗಳು',
     dashMessages: 'ಸಂದೇಶಗಳು & ಹಸ್ತಾಂತರ',
     dashClaims: 'ಮಾಲೀಕತ್ವದ ಹಕ್ಕು ಕೋರಿಕೆಗಳು',
@@ -593,6 +813,9 @@ export const translations: Record<Language, Translations> = {
     dashMarkCompleted: 'ಯಶಸ್ವಿಯಾಗಿ ಮರಳಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ 🎉',
 
     // Modals & Forms
+    matchModalTitle: 'ಸಂಭಾವ್ಯ ಹೊಂದಾಣಿಕೆ ಕಂಡುಬಂದಿದೆ',
+    matchModalSubtitle: 'ನಮ್ಮ ವ್ಯವಸ್ಥೆಯು ಈ ಎರಡು ಪಟ್ಟಿಗಳ ನಡುವೆ ಹೆಚ್ಚಿನ ಹೊಂದಾಣಿಕೆಯನ್ನು ಪತ್ತೆಹಚ್ಚಿದೆ.',
+    matchConfidence: 'ಹೊಂದಾಣಿಕೆ ನಿಖರತೆ',
     modalItemDetails: 'ವಸ್ತುವಿನ ಪೂರ್ಣ ವಿವರಗಳು',
     modalClose: 'ಮುಚ್ಚಿ',
     modalLocation: 'ಸ್ಥಳ',
@@ -652,9 +875,17 @@ export const translations: Record<Language, Translations> = {
 
     // Footer
     footerAbout: 'ಫೈಂಡ್‌ಇಟ್ ಸಮುದಾಯ ನೆಟ್‌ವರ್ಕ್',
+    footerDesc: 'ಜನರಿಗೆ ಅವರ ಪ್ರಮುಖ ವಸ್ತುಗಳನ್ನು ಮರಳಿ ಪಡೆಯಲು ಸಹಾಯ ಮಾಡುವ ನಂಬಿಕಸ್ಥ ವೇದಿಕೆ. ಸ್ವಯಂಚಾಲಿತ ಹೊಂದಾಣಿಕೆ ಮತ್ತು ಸುರಕ್ಷಿತ ಪರಿಶೀಲನೆಯೊಂದಿಗೆ.',
+    footerAlertsLabel: 'ನಿಮ್ಮ ಪ್ರದೇಶದ ಕಳೆದುಹೋದ & ಸಿಕ್ಕ ವಸ್ತುಗಳ ಎಚ್ಚರಿಕೆಗಳನ್ನು ಪಡೆಯಿರಿ',
+    footerEmailPlaceholder: 'ನಿಮ್ಮ ಇಮೇಲ್ ವಿಳಾಸ ನಮೂದಿಸಿ',
     footerSubscribeTitle: 'ನಿಮ್ಮ ಪ್ರದೇಶದ ಕಳೆದುಹೋದ & ಸಿಕ್ಕ ವಸ್ತುಗಳ ಎಚ್ಚರಿಕೆಗಳನ್ನು ಪಡೆಯಿರಿ',
     footerSubscribeBtn: 'ಚಂದಾದಾರರಾಗಿ',
     footerSubscribedSuccess: 'ಸ್ಥಳೀಯ ಎಚ್ಚರಿಕೆಗಳಿಗೆ ಯಶಸ್ವಿಯಾಗಿ ನೋಂದಾಯಿಸಲಾಗಿದೆ!',
+    footerColExplore: 'ಸಮುದಾಯ ಅನ್ವೇಷಣೆ',
+    footerColAction: 'ಕ್ರಮ ಕೈಗೊಳ್ಳಿ',
+    footerColTrust: 'ನಂಬಿಕೆ & ಕಾನೂನು',
+    footerSupport: 'ಬೆಂಬಲ ಸಹಾಯವಾಣಿ',
+    footerCopyright: `© ${new Date().getFullYear()} ಫೈಂಡ್‌ಇಟ್ ಸಮುದಾಯ ನೆಟ್‌ವರ್ಕ್. ಸುರಕ್ಷಿತ ಹಾಗೂ ಜವಾಬ್ದಾರಿಯುತ ಮರಳಿಸುವಿಕೆಗಾಗಿ ನಿರ್ಮಿಸಲಾಗಿದೆ.`,
     footerQuickNav: 'ಸಮುದಾಯ ಅನ್ವೇಷಣೆ',
     footerTakeAction: 'ಕ್ರಮ ಕೈಗೊಳ್ಳಿ',
     footerTrustLegal: 'ನಂಬಿಕೆ & ಕಾನೂನು',
@@ -668,7 +899,7 @@ export const translations: Record<Language, Translations> = {
 };
 
 export const getCategoryTranslation = (category: string, lang: Language): string => {
-  const t = translations[lang];
+  const t = translations[lang] || translations.en;
   switch (category) {
     case 'Electronics':
       return t.catElectronics;
